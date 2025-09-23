@@ -4,6 +4,30 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  /* Expose BLUE to Tailwind tokens */
+  --color-primary-light: var(--primary-light);
+  --color-primary-light-hover: var(--primary-light-hover);
+  --color-primary-light-active: var(--primary-light-active);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-active: var(--primary-active);
+  --color-primary-dark: var(--primary-dark);
+  --color-primary-dark-hover: var(--primary-dark-hover);
+  --color-primary-dark-active: var(--primary-dark-active);
+  --color-primary-darker: var(--primary-darker);
+
+  /* Expose GREEN to Tailwind tokens */
+  --color-secondary-light: var(--secondary-light);
+  --color-secondary-light-hover: var(--secondary-light-hover);
+  --color-secondary-light-active: var(--secondary-light-active);
+  --color-secondary: var(--secondary);
+  --color-secondary-hover: var(--secondary-hover);
+  --color-secondary-active: var(--secondary-active);
+  --color-secondary-dark: var(--secondary-dark);
+  --color-secondary-dark-hover: var(--secondary-dark-hover);
+  --color-secondary-dark-active: var(--secondary-dark-active);
+  --color-secondary-darker: var(--secondary-darker);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
@@ -30,9 +54,7 @@
   --color-muted-foreground: var(--muted-foreground);
   --color-muted: var(--muted);
   --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
   --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
@@ -44,6 +66,32 @@
 }
 
 :root {
+  /* PRIMARY: BLUE */
+  --primary-light: #e6f1fd;
+  --primary-light-hover: #daeafb;
+  --primary-light-active: #b2d4f7;
+  --primary: #0575e6;
+  --primary-hover: #0569cf;
+  --primary-active: #045eb8;
+  --primary-dark: #0458ad;
+  --primary-dark-hover: #03468a;
+  --primary-dark-active: #023567;
+  --primary-darker: #022951;
+  --primary-foreground: oklch(0.985 0 0);
+
+  /* SECONDARY: GREEN */
+  --secondary-light: #e9fdf0;
+  --secondary-light-hover: #ddfce9;
+  --secondary-light-active: #b9f6d1;
+  --secondary: #1ee86b;
+  --secondary-hover: #1bd160;
+  --secondary-active: #18ba56;
+  --secondary-dark: #17ae50;
+  --secondary-dark-hover: #128b40;
+  --secondary-dark-active: #0d6830;
+  --secondary-darker: #0b5125;
+  --secondary-foreground: oklch(0.985 0 0);
+
   --radius: 0.625rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.141 0.005 285.823);
@@ -51,10 +99,6 @@
   --card-foreground: oklch(0.141 0.005 285.823);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.141 0.005 285.823);
-  --primary: oklch(0.21 0.006 285.885);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.967 0.001 286.375);
-  --secondary-foreground: oklch(0.21 0.006 285.885);
   --muted: oklch(0.967 0.001 286.375);
   --muted-foreground: oklch(0.552 0.016 285.938);
   --accent: oklch(0.967 0.001 286.375);
