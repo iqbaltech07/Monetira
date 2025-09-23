@@ -4,6 +4,10 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  /* FONT */
+  --font-inter: var(--font-inter);
+  --font-poppins: var(--font-poppins);
+
   /* Expose BLUE to Tailwind tokens */
   --color-primary-light: var(--primary-light);
   --color-primary-light-hover: var(--primary-light-hover);
@@ -156,15 +160,19 @@
   --sidebar-ring: oklch(0.552 0.016 285.938);
 }
 
+@utility font-inter {
+  font-family: var(--font-inter), sans-serif;
+}
+
+@utility font-poppins {
+  font-family: var(--font-poppins), sans-serif;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply font-inter bg-background text-foreground;
   }
-}
-
-body {
-  font-family: var(--font-poppins), sans-serif;
 }
