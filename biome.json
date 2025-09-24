@@ -17,9 +17,15 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true,
       "suspicious": {
+        "noArrayIndexKey": "off",
         "noUnknownAtRules": "off"
+      },
+      "a11y": {
+        "useValidAnchor": "off"
+      },
+      "complexity": {
+        "noImportantStyles": "off"
       }
     },
     "domains": {

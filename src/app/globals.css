@@ -172,7 +172,13 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply font-inter bg-background text-foreground;
   }
+}
+
+html {
+  scroll-behavior: smooth !important;
+  scroll-padding-top: 55px;
 }
