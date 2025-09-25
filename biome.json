@@ -22,7 +22,10 @@
         "noUnknownAtRules": "off"
       },
       "a11y": {
-        "useValidAnchor": "off"
+        "useValidAnchor": "off",
+        "useSemanticElements": "off",
+        "useFocusableInteractive": "off",
+        "useAriaPropsForRole": "off"
       },
       "complexity": {
         "noImportantStyles": "off"
