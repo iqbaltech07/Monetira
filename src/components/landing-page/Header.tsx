@@ -12,14 +12,10 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "~/components/ui/drawer";
+import { NAV_LINKS } from "~/lib/constants";
 
 export const Header = () => {
-  const navLinks = [
-    { href: "#home", label: "Beranda" },
-    { href: "#how-it-works", label: "Cara Kerja" },
-    { href: "#features", label: "Fitur" },
-    { href: "#faq", label: "FAQ" },
-  ];
+
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md dark:border-gray-800 dark:bg-gray-950/80">
@@ -37,7 +33,7 @@ export const Header = () => {
         </Link>
 
         <nav className="hidden items-center gap-8 md:flex">
-          {navLinks.map((link) => (
+          {NAV_LINKS.map((link) => (
             <Link
               key={link.href}
               className="text-base font-medium text-gray-600 transition-colors hover:text-primary dark:text-gray-400"
@@ -81,7 +77,7 @@ export const Header = () => {
                 </DrawerTitle>
               </DrawerHeader>
               <nav className="mt-8 flex flex-col gap-6 text-lg font-medium">
-                {navLinks.map((link) => (
+                {NAV_LINKS.map((link) => (
                   <DrawerClose asChild key={link.href}>
                     <Link
                       className="text-gray-700 transition-colors hover:text-primary dark:text-gray-300"

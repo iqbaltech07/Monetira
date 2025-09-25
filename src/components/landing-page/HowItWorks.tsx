@@ -1,27 +1,4 @@
-import { BarChart3, FilePlus, UserPlus } from "lucide-react";
-
-const steps = [
-  {
-    step: "1",
-    icon: <UserPlus className="h-10 w-10 text-primary" />,
-    title: "Daftar & Masuk",
-    description: "Buat akun dan login ke Monetira hanya dalam hitungan detik.",
-  },
-  {
-    step: "2",
-    icon: <FilePlus className="h-10 w-10 text-primary" />,
-    title: "Catat & Kelola Transaksi",
-    description:
-      "Catat pemasukan, pengeluaran, tabungan, hingga hutang dengan mudah.",
-  },
-  {
-    step: "3",
-    icon: <BarChart3 className="h-10 w-10 text-primary" />,
-    title: "Pantau Laporan & Progres",
-    description:
-      "Lihat laporan visual, progres tabungan, dan kelola keuangan lebih baik.",
-  },
-];
+import { STEPS } from "~/lib/constants";
 
 export const HowItWorks = () => {
   return (
@@ -39,10 +16,10 @@ export const HowItWorks = () => {
         <div className="relative mt-16">
           <div className="absolute left-1/2 top-13 hidden h-px w-2/3 -translate-x-1/2 border-t-2 border-dashed border-gray-300 dark:border-gray-700 lg:block"></div>
           <div className="grid gap-12 lg:grid-cols-3">
-            {steps.map((step, i) => (
+            {STEPS.map((step, i) => (
               <div key={i} className="relative text-center">
                 <div className="relative z-10 mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-white shadow-lg dark:bg-gray-800">
-                  {step.icon}
+                  <step.icon className="h-10 w-10 text-primary" />
                 </div>
                 <p className="mt-6 text-sm font-semibold uppercase tracking-wide text-primary">
                   Langkah {step.step}

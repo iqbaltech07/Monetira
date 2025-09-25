@@ -6,29 +6,8 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "~/components/ui/accordion";
+import { FAQS } from "~/lib/constants";
 
-const faqs = [
-  {
-    question: "Apakah Monetira gratis digunakan?",
-    answer:
-      "Ya, Monetira bisa digunakan gratis untuk mencatat pemasukan, pengeluaran, tabungan, hingga arisan.",
-  },
-  {
-    question: "Apakah data saya aman?",
-    answer:
-      "Sangat aman. Data keuangan Anda disimpan dengan enkripsi modern dan tidak dibagikan ke pihak ketiga.",
-  },
-  {
-    question: "Apakah Monetira bisa diakses di semua perangkat?",
-    answer:
-      "Tentu saja. Karena berbasis web, Monetira dapat digunakan di laptop, tablet, maupun smartphone.",
-  },
-  {
-    question: "Apakah Monetira bisa digunakan dalam mode offline?",
-    answer:
-      "Saat ini Monetira membutuhkan koneksi internet agar semua data tersimpan dengan aman. Namun, kami sedang merencanakan dukungan mode offline di versi mendatang.",
-  },
-];
 
 export const FAQ = () => {
   return (
@@ -45,7 +24,7 @@ export const FAQ = () => {
 
         <div className="mx-auto max-w-2xl">
           <Accordion type="single" collapsible className="space-y-4">
-            {faqs.map((faq, i) => (
+            {FAQS.map((faq, i) => (
               <AccordionItem key={i} value={`item-${i}`}>
                 <AccordionTrigger className="text-left text-base sm:text-lg font-medium hover:text-primary text hover:no-underline">
                   {faq.question}
