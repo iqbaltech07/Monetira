@@ -8,7 +8,6 @@ import {
 } from "~/components/ui/accordion";
 import { FAQS } from "~/lib/constants";
 
-
 export const FAQ = () => {
   return (
     <section id="faq" className="bg-primary/5 dark:bg-gray-950 py-20">
