@@ -32,6 +32,18 @@
   --color-secondary-dark-active: var(--secondary-dark-active);
   --color-secondary-darker: var(--secondary-darker);
 
+  /* Expose PURPLE to Tailwind tokens */
+  --color-tertiary-light: var(--tertiary-light);
+  --color-tertiary-light-hover: var(--tertiary-light-hover);
+  --color-tertiary-light-active: var(--tertiary-light-active);
+  --color-tertiary: var(--tertiary);
+  --color-tertiary-hover: var(--tertiary-hover);
+  --color-tertiary-active: var(--tertiary-active);
+  --color-tertiary-dark: var(--tertiary-dark);
+  --color-tertiary-dark-hover: var(--tertiary-dark-hover);
+  --color-tertiary-dark-active: var(--tertiary-dark-active);
+  --color-tertiary-darker: var(--tertiary-darker);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
@@ -95,6 +107,19 @@
   --secondary-dark-active: #0d6830;
   --secondary-darker: #0b5125;
   --secondary-foreground: oklch(0.985 0 0);
+
+  /* TERTIARY: PURPLE */
+  --tertiary-light: #f4eefd;
+  --tertiary-light-hover: #eadcfb;
+  --tertiary-light-active: #d5b9f7;
+  --tertiary: #8e44ad;
+  --tertiary-hover: #803d9b;
+  --tertiary-active: #72368a;
+  --tertiary-dark: #6b3381;
+  --tertiary-dark-hover: #552967;
+  --tertiary-dark-active: #401f4d;
+  --tertiary-darker: #31183c;
+  --tertiary-foreground: oklch(0.985 0 0);
 
   --radius: 0.625rem;
   --background: oklch(1 0 0);
