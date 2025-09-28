@@ -3,6 +3,7 @@ import { FaArrowTrendDown, FaArrowTrendUp } from "react-icons/fa6";
 import { ExpenseCategoryCard } from "~/components/features/dashboard/ExpenseCategoryCard";
 import { IncomeExpenseChart } from "~/components/features/dashboard/IncomeExpenseChart";
 import { SavingsGoalCard } from "~/components/features/savings/SavingsGoalCard";
+import { StatCard } from "~/components/shared/StatCard";
 import {
   Card,
   CardContent,
@@ -18,25 +19,19 @@ const summaryData = [
     title: "Total Saldo",
     amount: "Rp. 25.700.000",
     icon: BiSolidWallet,
-    textColor: "text-primary",
-    bgColor: "bg-primary",
-    shadowColor: "shadow-primary-light-active",
+    variant: "primary",
   },
   {
     title: "Pemasukan",
     amount: "Rp 7.500.000",
     icon: FaArrowTrendUp,
-    textColor: "text-secondary-dark",
-    bgColor: "bg-secondary-dark",
-    shadowColor: "shadow-secondary-light-active",
+    variant: "success",
   },
   {
     title: "Pengeluaran",
     amount: "Rp 3.250.000",
     icon: FaArrowTrendDown,
-    textColor: "text-destructive",
-    bgColor: "bg-destructive",
-    shadowColor: "shadow-destructive/30",
+    variant: "danger",
   },
 ];
 
@@ -61,31 +56,13 @@ export default async function DashboardPage() {
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         {summaryData.map((item) => (
-          <div
+          <StatCard
             key={item.title}
-            className={`relative rounded-lg bg-white p-4 shadow-xl shadow-slate-300/40`}
-          >
-            <div className="absolute -left-3 -top-3 rounded-[45%] bg-slate-100 p-2">
-              <div
-                className={`${item.bgColor} rounded-full p-2 text-white shadow-lg ${item.shadowColor}`}
-              >
-                <item.icon size={28} />
-              </div>
-            </div>
-            <div className="text-right font-medium text-slate-500">
-              Bulan ini
-            </div>
-            <div className="mt-6 flex flex-col">
-              <h4 className="font-semibold text-lg text-slate-600">
-                {item.title}
-              </h4>
-              <p
-                className={`mt-4 text-2xl font-bold md:text-3xl ${item.textColor}`}
-              >
-                {item.amount}
-              </p>
-            </div>
-          </div>
+            title={item.title}
+            amount={item.amount}
+            icon={item.icon}
+            variant={item.variant as "primary" | "success" | "danger"}
+          />
         ))}
       </div>
 
