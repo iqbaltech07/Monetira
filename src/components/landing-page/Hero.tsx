@@ -27,7 +27,7 @@ export const Hero = () => {
         </div>
 
         <div className="w-full flex justify-center md:justify-end">
-          <div className="relative w-[350px] h-[350px] sm:w-[450px] sm:h-[450px] md:w-[500px] md:h-[500px] lg:w-[700px] lg:h-[700px]">
+          <div className="relative w-[350px] h-[350px] sm:w-[450px] sm:h-[450px] md:w-[500px] md:h-[500px] lg:w-[800px] lg:h-[800px]">
             <Image
               src="/images/mockup.png"
               alt="mockup"

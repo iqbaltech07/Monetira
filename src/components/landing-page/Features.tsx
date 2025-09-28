@@ -1,6 +1,5 @@
 import { FEATURE_LIST } from "~/lib/constants";
 
-
 export const Features = () => {
   return (
     <section id="features" className="bg-white py-20 dark:bg-gray-950">

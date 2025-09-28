@@ -83,6 +83,5 @@ export function Navbar() {
         </DropdownMenuContent>
       </DropdownMenu>
     </header>
-
   );
 }

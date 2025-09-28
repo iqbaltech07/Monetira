@@ -15,8 +15,6 @@ import {
 import { NAV_LINKS } from "~/lib/constants";
 
 export const Header = () => {
-
-
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md dark:border-gray-800 dark:bg-gray-950/80">
       <div className="container mx-auto flex h-17 sm:h-20 items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -26,6 +24,8 @@ export const Header = () => {
             alt="monetira-icon"
             height={35}
             width={35}
+            priority
+            draggable="false"
           />
           <span className="text-xl font-bold text-primary dark:text-white">
             Monetira

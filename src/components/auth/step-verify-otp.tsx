@@ -10,8 +10,9 @@ export const StepVerifyOtp = () => (
     <div className="text-center mb-4">
       <h1 className="text-2xl font-bold">Verifikasi Email Anda</h1>
       <p className="text-balance text-muted-foreground text-sm max-w-sm">
-        Kami telah mengirimkan kode verifikasi ke email Anda. Silakan masukkan
-        kode tersebut di bawah ini.
+        Kami telah mengirim kode verifikasi ke{" "}
+        <span className="font-bold">user@email.com</span>. Masukkan kode
+        tersebut di bawah ini untuk melanjutkan.
       </p>
     </div>
     <InputOTP maxLength={6}>
@@ -29,7 +30,7 @@ export const StepVerifyOtp = () => (
     </InputOTP>
     <p className="text-sm text-muted-foreground">
       Tidak menerima kode?{" "}
-      <button type="button" className="underline">
+      <button type="button" className="underline underline-offset-2">
         Kirim ulang
       </button>
     </p>

@@ -9,12 +9,12 @@ export const Footer = () => {
         <div>
           <div className="flex items-center mb-3 gap-2">
             <Image
-              src="/images/monetira-icon.svg"
-              alt="monetira-icon"
-              height={35}
-              width={35}
+              src="/images/monetira-icon-desc.svg"
+              alt="Logo"
+              width={220}
+              height={220}
+              draggable="false"
             />
-            <h3 className="text-2xl font-bold text-blue-600">Monetira</h3>
           </div>
           <p className="text-gray-600 text-sm">
             Kelola keuangan lebih mudah. Catat, atur, dan capai tujuan
