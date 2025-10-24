@@ -3,6 +3,8 @@ import { FaArrowTrendDown, FaArrowTrendUp } from "react-icons/fa6";
 import { ExpenseCategoryCard } from "~/components/features/dashboard/ExpenseCategoryCard";
 import { IncomeExpenseChart } from "~/components/features/dashboard/IncomeExpenseChart";
 import { SavingsGoalCard } from "~/components/features/savings/SavingsGoalCard";
+import { PageHeader } from "~/components/shared/PageHeader";
+import type { StatCardProps } from "~/components/shared/StatCard";
 import { StatCard } from "~/components/shared/StatCard";
 import {
   Card,
@@ -14,24 +16,36 @@ import {
 import { mockTransactions } from "~/lib/placeholder-data";
 import type { Transaction } from "~/lib/utils";
 
-const summaryData = [
+const summaryData: StatCardProps[] = [
   {
     title: "Total Saldo",
-    amount: "Rp. 25.700.000",
+    description: "Total dana Anda saat ini.",
+    amount: "Rp. 1.300.700.000",
     icon: BiSolidWallet,
     variant: "primary",
+    change: "+13.5%",
+    changeColor: "primary",
+    changeDescription: "dari bulan lalu",
   },
   {
     title: "Pemasukan",
-    amount: "Rp 7.500.000",
+    description: "Pendapatan bulan ini.",
+    amount: "Rp 799.500.000",
     icon: FaArrowTrendUp,
     variant: "success",
+    change: "+5.5%",
+    changeColor: "success",
+    changeDescription: "dari bulan lalu",
   },
   {
     title: "Pengeluaran",
-    amount: "Rp 3.250.000",
+    description: "Pengeluaran bulan ini.",
+    amount: "Rp 103.250.000",
     icon: FaArrowTrendDown,
     variant: "danger",
+    change: "+2.5%",
+    changeColor: "danger",
+    changeDescription: "dari bulan lalu",
   },
 ];
 
@@ -45,24 +59,14 @@ export default async function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-6 md:gap-8">
-      <div>
-        <h1 className="font-poppins text-3xl font-bold md:text-4xl">
-          Dashboard
-        </h1>
-        <p className="text-muted-foreground mt-2 font-medium text-base md:text-lg">
-          Berikut adalah ringkasan keuangan Anda bulan ini.
-        </p>
-      </div>
+      <PageHeader
+        title="Dashboard"
+        description="Berikut adalah ringkasan keuangan Anda bulan ini."
+      />
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:grid-cols-3">
         {summaryData.map((item) => (
-          <StatCard
-            key={item.title}
-            title={item.title}
-            amount={item.amount}
-            icon={item.icon}
-            variant={item.variant as "primary" | "success" | "danger"}
-          />
+          <StatCard key={item.title} {...item} />
         ))}
       </div>
 

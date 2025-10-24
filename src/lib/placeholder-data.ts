@@ -1,5 +1,6 @@
 import { subMonths } from "date-fns";
 import type { Transaction } from "./utils";
+import { Car, Film, Landmark, Salad, ShoppingBag } from "lucide-react";
 
 const today = new Date();
 
@@ -140,5 +141,60 @@ export const mockSavingsGoals: SavingsGoal[] = [
     currentAmount: 15_000_000,
     targetAmount: 20_000_000,
     targetDate: new Date("2025-09-30"),
+  },
+];
+
+export type DetailedTransaction = {
+  id: string;
+  type: "INCOME" | "EXPENSE";
+  amount: number;
+  description: string;
+  date: Date;
+  category: {
+    name: string;
+    icon: React.ElementType;
+  };
+};
+
+export const mockDetailedTransactions: DetailedTransaction[] = [
+  {
+    id: "1",
+    type: "INCOME",
+    amount: 7500000,
+    description: "Gaji Bulanan",
+    date: new Date("2025-09-01"),
+    category: { name: "Gaji", icon: Landmark },
+  },
+  {
+    id: "2",
+    type: "EXPENSE",
+    amount: 85000,
+    description: "Makan Siang",
+    date: new Date("2025-09-25"),
+    category: { name: "Makanan", icon: Salad },
+  },
+  {
+    id: "3",
+    type: "EXPENSE",
+    amount: 150000,
+    description: "Nonton Bioskop",
+    date: new Date("2025-09-24"),
+    category: { name: "Hiburan", icon: Film },
+  },
+  {
+    id: "4",
+    type: "EXPENSE",
+    amount: 50000,
+    description: "Bensin Motor",
+    date: new Date("2025-09-23"),
+    category: { name: "Transportasi", icon: Car },
+  },
+  {
+    id: "5",
+    type: "EXPENSE",
+    amount: 450000,
+    description: "Beli Baju",
+    date: new Date("2025-09-22"),
+    category: { name: "Belanja", icon: ShoppingBag },
   },
 ];
