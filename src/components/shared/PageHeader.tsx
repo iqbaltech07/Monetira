@@ -1,14 +1,14 @@
 import type React from "react";
 
 interface PageHeaderProps {
-  title: string;
+  title?: string;
   description?: string;
   children?: React.ReactNode;
 }
 
 export function PageHeader({ title, description, children }: PageHeaderProps) {
   return (
-    <div className="flex flex-col mb-4">
+    <div className="flex flex-col">
       <div>
         <h1 className="font-poppins text-2xl font-bold md:text-4xl">{title}</h1>
         {description && (

@@ -1,5 +1,5 @@
 import { formatCurrency } from "~/lib/utils";
-import { ElementType } from "react";
+import type { ElementType } from "react";
 import { FaRegCalendarAlt } from "react-icons/fa";
 
 /* =========================

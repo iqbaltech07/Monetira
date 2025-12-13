@@ -20,9 +20,7 @@ const ButtonNewTarget = () => {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Form Target</DialogTitle>
-          <DialogDescription>
-            Pengisian Target
-          </DialogDescription>
+          <DialogDescription>Pengisian Target</DialogDescription>
         </DialogHeader>
       </DialogContent>
     </Dialog>

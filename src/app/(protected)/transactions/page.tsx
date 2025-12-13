@@ -2,11 +2,9 @@ import { BiMoney } from "react-icons/bi";
 import { FaArrowTrendDown, FaArrowTrendUp } from "react-icons/fa6";
 import ButtonNewTransaction from "~/components/features/transactions/ButtonNewTransaction";
 import SearchFilterTransaction from "~/components/features/transactions/SearchFilterTransaction";
-import { TransactionHistoryCard } from "~/components/features/transactions/TransactionHistoryCard";
 import TransactionRowHistory, {
-  HistoryTransaction,
+  type HistoryTransaction,
 } from "~/components/features/transactions/TransactionRowHistory";
-import { PageHeader } from "~/components/shared/PageHeader";
 import type { StatCardProps } from "~/components/shared/StatCard";
 import { StatCard } from "~/components/shared/StatCard";
 
@@ -73,20 +71,9 @@ const historyTransactions: HistoryTransaction[] = [
   },
 ];
 
-/** =========================
- *  Page
- *  ======================= */
-
 export default function TransactionPage() {
   return (
     <div>
-      <PageHeader
-        title="Transaksi"
-        description="Kelola semua transaksi keuangan Anda"
-      >
-        <ButtonNewTransaction />
-      </PageHeader>
-
       <div className="flex flex-col gap-4">
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {summaryData.map((item) => (
@@ -94,7 +81,10 @@ export default function TransactionPage() {
           ))}
         </div>
 
-        <div className="my-2">
+        <div className="my-1 flex w-full gap-4">
+          <div className="flex items-center w-1/3">
+            <ButtonNewTransaction />
+          </div>
           <SearchFilterTransaction />
         </div>
 

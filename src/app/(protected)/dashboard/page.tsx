@@ -3,7 +3,6 @@ import { FaArrowTrendDown, FaArrowTrendUp } from "react-icons/fa6";
 import { ExpenseCategoryCard } from "~/components/features/dashboard/ExpenseCategoryCard";
 import { IncomeExpenseChart } from "~/components/features/dashboard/IncomeExpenseChart";
 import { SavingsGoalCard } from "~/components/features/savings/SavingsGoalCard";
-import { PageHeader } from "~/components/shared/PageHeader";
 import type { StatCardProps } from "~/components/shared/StatCard";
 import { StatCard } from "~/components/shared/StatCard";
 import {
@@ -59,11 +58,6 @@ export default async function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-6 md:gap-8">
-      <PageHeader
-        title="Dashboard"
-        description="Berikut adalah ringkasan keuangan Anda bulan ini."
-      />
-
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:grid-cols-3">
         {summaryData.map((item) => (
           <StatCard key={item.title} {...item} />

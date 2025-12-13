@@ -102,4 +102,4 @@ export function IncomeExpenseChart({ data }: { data: Transaction[] }) {
   );
 }
 
-console.log("Hello World")
+console.log("Hello World");

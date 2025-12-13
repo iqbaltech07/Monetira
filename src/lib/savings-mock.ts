@@ -12,7 +12,7 @@ export interface SavingGoal {
   category: "Liburan" | "Darurat" | "Gadget" | "Pendidikan" | "Lainnya";
   isActive: boolean;
   status: SavingStatus;
-  startAmount: number; // dana awal yang sudah ada
+  startAmount: number; // dana awal
   targetAmount: number; // target akhir
   monthlyTarget: number; // rencana nabung per bulan
   deadline: Date;

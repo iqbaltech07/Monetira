@@ -20,9 +20,7 @@ const ButtonNewTransaction = () => {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Form Transaksi</DialogTitle>
-          <DialogDescription>
-            Pengisian Transaksi
-          </DialogDescription>
+          <DialogDescription>Pengisian Transaksi</DialogDescription>
         </DialogHeader>
       </DialogContent>
     </Dialog>

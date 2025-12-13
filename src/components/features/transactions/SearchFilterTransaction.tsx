@@ -11,7 +11,7 @@ import {
 
 const SearchFilterTransaction = () => {
   return (
-    <div className="flex gap-4 bg-white p-4 rounded-lg shadow-xl shadow-slate-300/40">
+    <div className="flex w-full gap-4 bg-white p-4 rounded-lg shadow-lg shadow-slate-300/40">
       <div className="relative w-3/4">
         <span className="absolute left-3 top-1/2 -translate-y-1/2">
           <FaMagnifyingGlass size={16} className="text-gray-500" />

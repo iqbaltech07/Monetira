@@ -1,9 +1,10 @@
 import { BiTargetLock } from "react-icons/bi";
 import { FaPiggyBank, FaStar } from "react-icons/fa6";
 import ButtonNewTarget from "~/components/features/savings/ButtonNewTarget";
-import { PageHeader } from "~/components/shared/PageHeader";
+import SavingCard from "~/components/features/savings/SavingCard";
 import type { StatCardProps } from "~/components/shared/StatCard";
 import { StatCard } from "~/components/shared/StatCard";
+// import { mockSavings } from "~/lib/savings-mock";
 
 const summaryData: StatCardProps[] = [
   {
@@ -35,19 +36,18 @@ const summaryData: StatCardProps[] = [
 export default function SavingsPage() {
   return (
     <div>
-      <PageHeader
-        title="Tabungan & Target"
-        description="Atur dan pantau target tabungan Anda"
-      >
-        <ButtonNewTarget />
-      </PageHeader>
       <div className="flex flex-col gap-4">
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {summaryData.map((item) => (
             <StatCard key={item.title} {...item} />
           ))}
         </div>
-        
+        <div className="flex justify-end">
+          <ButtonNewTarget />
+        </div>
+        <div className="grid grid-cols-2 gap-8">
+          <SavingCard />
+        </div>
       </div>
     </div>
   );

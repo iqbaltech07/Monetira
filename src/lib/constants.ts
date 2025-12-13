@@ -14,16 +14,17 @@ import {
 } from "lucide-react";
 
 import { BsGridFill } from "react-icons/bs";
-import { FaPiggyBank } from "react-icons/fa6";
+import { FaPiggyBank, FaUser } from "react-icons/fa6";
 import { GiCardExchange } from "react-icons/gi";
+import { SiBitcoin } from "react-icons/si";
 
 export const NAV_ITEMS = [
   { href: "/dashboard", icon: BsGridFill, label: "Dashboard" },
   { href: "/transactions", icon: GiCardExchange, label: "Transaksi" },
   { href: "/savings", icon: FaPiggyBank, label: "Tabungan" },
+  { href: "/market", icon: SiBitcoin, label: "Market" },
+  { href: "/profile", icon: FaUser, label: "Akun Saya" },
 ];
-
-/* ======================================================= landing page area ======================================================= */
 
 export const NAV_LINKS = [
   { href: "#home", label: "Beranda" },
