@@ -2,26 +2,29 @@
 
 import { format } from "date-fns";
 import { Progress } from "~/components/ui/progress";
-import type { SavingsGoal } from "~/lib/placeholder-data";
 import { formatCurrency } from "~/lib/utils";
+import type { Saving } from "~/types/database";
 
 interface SavingsGoalItemProps {
-  goal: SavingsGoal;
+  goal: Saving;
 }
 
 export function SavingsGoalItem({ goal }: SavingsGoalItemProps) {
   const progress = Math.min(
-    (goal.currentAmount / goal.targetAmount) * 100,
+    (goal.current_amount / goal.target_amount) * 100,
     100,
   );
 
   return (
     <div>
       <div className="mb-2 flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:justify-between">
-        <p className="font-medium text-sm md:text-base">{goal.title}</p>
+        <p className="font-medium text-sm md:text-base flex items-center gap-2">
+          {goal.emoji && <span>{goal.emoji}</span>}
+          {goal.name}
+        </p>
         <p className="text-sm text-muted-foreground">
-          {formatCurrency(goal.currentAmount)} /{" "}
-          {formatCurrency(goal.targetAmount)}
+          {formatCurrency(goal.current_amount)} /{" "}
+          {formatCurrency(goal.target_amount)}
         </p>
       </div>
 
@@ -29,7 +32,7 @@ export function SavingsGoalItem({ goal }: SavingsGoalItemProps) {
 
       <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
         <p>{progress.toFixed(1)}% tercapai</p>
-        <p>Target: {format(goal.targetDate, "dd/MM/yyyy")}</p>
+        {goal.deadline && <p>Target: {format(goal.deadline, "dd/MM/yyyy")}</p>}
       </div>
     </div>
   );

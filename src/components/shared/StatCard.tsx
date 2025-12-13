@@ -1,4 +1,6 @@
+import { Eye, EyeOff } from "lucide-react";
 import type { ElementType } from "react";
+import { Button } from "~/components/ui/button";
 
 export interface StatCardProps {
   title: string;
@@ -9,22 +11,10 @@ export interface StatCardProps {
   change?: string;
   changeColor?: "success" | "danger" | "primary" | "warning";
   changeDescription?: string;
+  isHidden?: boolean;
+  onToggleHidden?: () => void;
+  showEye?: boolean;
 }
-
-// const _variantChangeStyles = {
-//   primary: {
-//     textColor: "text-primary",
-//   },
-//   success: {
-//     textColor: "text-secondary-dark",
-//   },
-//   danger: {
-//     textColor: "text-destructive",
-//   },
-//   warning: {
-//     textColor: "text-chart-5",
-//   },
-// };
 
 const variantStyles = {
   primary: {
@@ -55,39 +45,36 @@ export function StatCard({
   amount,
   icon: Icon,
   variant = "primary",
-}: // changeColor = "primary",
-StatCardProps) {
+  isHidden = false,
+  onToggleHidden,
+  showEye = false,
+}: StatCardProps) {
   const styles = variantStyles[variant];
-  // const changeStyles = variantChangeStyles[changeColor];
 
   return (
-    <div className="relative rounded-lg bg-white p-4 shadow-xl shadow-slate-300/40">
-      {/* <div className="absolute -left-3 -top-3 rounded-[45%] bg-slate-100 p-2">
-        <div
-          className={`${styles.bgColor} rounded-full p-2 text-white shadow-lg ${styles.shadowColor}`}
-        >
-          <Icon size={28} />
-        </div>
-      </div> */}
-      {/* <div className="text-right text-sm font-medium text-slate-500">
-        <span className={`${changeStyles.textColor || "text-slate-500"} mr-1`}>
-          {change}
-        </span>
-        {changeDescription}
-      </div> */}
-
-      <div className={`flex flex-col`}>
+    <div className="relative rounded-lg bg-white p-4 shadow-xl shadow-slate-300/40 transition-all hover:shadow-slate-300/60">
+      <div className="flex flex-col">
         <div
           className={`flex items-center justify-between gap-2 ${styles.textColor}`}
         >
           <h4 className="font-semibold text-xl text-zinc-600">{title}</h4>
           <Icon size={26} />
         </div>
-        <p
-          className={`mt-4 mb-2 text-2xl font-bold md:text-xl ${styles.textColor}`}
-        >
-          {amount}
-        </p>
+        <div className="mt-4 mb-2 flex items-center gap-2">
+          <p className={`text-2xl font-bold md:text-xl ${styles.textColor}`}>
+            {isHidden ? "Rp ••••••••" : amount}
+          </p>
+          {showEye && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 text-muted-foreground hover:text-foreground"
+              onClick={onToggleHidden}
+            >
+              {isHidden ? <EyeOff size={16} /> : <Eye size={16} />}
+            </Button>
+          )}
+        </div>
         <p className="text-muted-foreground text-sm font-medium">
           {description}
         </p>

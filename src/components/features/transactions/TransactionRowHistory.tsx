@@ -1,23 +1,36 @@
 import { formatCurrency } from "~/lib/utils";
 import type { ElementType } from "react";
-import { FaRegCalendarAlt } from "react-icons/fa";
+import { Calendar } from "lucide-react";
+import type { Transaction } from "~/types/database";
+import {
+  ArrowDown,
+  Wallet,
+  Laptop,
+  TrendingUp,
+  Utensils,
+  Car,
+  Home,
+  Film,
+  ShoppingBag,
+  HeartPulse,
+  BookOpen,
+} from "lucide-react";
 
 /* =========================
- *  Util: Format & Helpers
+ * Util: Format & Helpers
  * ========================= */
 
-const formatSignedPrice = (amount: number, type: TransactionType) => {
+const formatSignedPrice = (amount: number, type: "Income" | "Expense") => {
   const abs = Math.abs(amount);
-  const prefix = type === "income" ? "+" : "-";
+  const prefix = type === "Income" ? "+" : "-";
   const className =
-    type === "income"
+    type === "Income"
       ? "text-emerald-600 dark:text-emerald-400"
       : "text-red-600 dark:text-red-400";
   return { text: `${prefix} ${formatCurrency(abs)}`, className };
 };
 
-const formatDateTimeID = (iso: string) => {
-  const d = new Date(iso);
+const formatDateTimeID = (date: Date) => {
   return new Intl.DateTimeFormat("id-ID", {
     day: "2-digit",
     month: "short",
@@ -25,95 +38,91 @@ const formatDateTimeID = (iso: string) => {
     hour: "2-digit",
     minute: "2-digit",
     hour12: false,
-  }).format(d);
+  }).format(date);
 };
 
 /* =========================
- *  Types
+ * Icon Mapping
  * ========================= */
-
-type TransactionType = "income" | "expense";
-
-type Category =
-  | "gaji"
-  | "freelance"
-  | "makanan"
-  | "transportasi"
-  | "hiburan"
-  | "tagihan"
-  | "lainnya";
-
-export interface HistoryTransaction {
-  id: string;
-  title: string;
-  category: Category;
-  icon: ElementType;
-  type: TransactionType;
-  amount: number;
-  date: string; // ISO string: "2025-10-01T09:30:00+07:00"
-}
-
-/* =========================
- *  Badge Color Mapping
- * ========================= */
-
-const categoryColorMap: Record<Category, string> = {
-  gaji: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300",
-  freelance:
-    "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300",
-  makanan:
-    "bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300",
-  transportasi:
-    "bg-cyan-100 text-cyan-800 dark:bg-cyan-900/40 dark:text-cyan-300",
-  hiburan: "bg-pink-100 text-pink-800 dark:bg-pink-900/40 dark:text-pink-300",
-  tagihan:
-    "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300",
-  lainnya: "bg-gray-100 text-gray-800 dark:bg-gray-900/40 dark:text-gray-300",
+const iconMap: Record<string, ElementType> = {
+  Wallet: Wallet,
+  Laptop: Laptop,
+  TrendingUp: TrendingUp,
+  Utensils: Utensils,
+  Car: Car,
+  Home: Home,
+  Film: Film,
+  ShoppingBag: ShoppingBag,
+  HeartPulse: HeartPulse,
+  BookOpen: BookOpen,
 };
 
 /* =========================
- *  Component
+ * Component
  * ========================= */
 
-const TransactionRowHistory = ({ item }: { item: HistoryTransaction }) => {
+const TransactionRowHistory = ({ item }: { item: Transaction }) => {
   const { text, className } = formatSignedPrice(item.amount, item.type);
-  const badgeColor = categoryColorMap[item.category];
+
+  // Determine icon
+  const Icon =
+    item.category?.icon && iconMap[item.category.icon]
+      ? iconMap[item.category.icon]
+      : item.type === "Income"
+        ? TrendingUp
+        : ArrowDown;
+
+  // Determine badge color based on type for now, or category name if needed
+  const badgeColor =
+    item.type === "Income"
+      ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300"
+      : "bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300";
 
   return (
-    <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-sm dark:border-slate-800 dark:bg-slate-900 transition-colors">
-      <div className="flex items-center gap-3">
+    <div className="group flex items-center justify-between rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition-all hover:shadow-md dark:border-slate-800 dark:bg-slate-900 sm:px-4 sm:py-3 gap-3">
+      {/* LEFT SECTION: Icon + Info */}
+      <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
+        {/* Icon Wrapper */}
         <span
-          className={`inline-flex h-9 w-9 items-center justify-center rounded-lg ${
-            item.type === "income"
-              ? "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300"
-              : "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300"
+          className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl sm:h-11 sm:w-11 ${
+            item.type === "Income"
+              ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400"
+              : "bg-rose-50 text-rose-600 dark:bg-rose-900/20 dark:text-rose-400"
           }`}
         >
-          <item.icon aria-hidden />
+          <Icon aria-hidden className="h-5 w-5 sm:h-6 sm:w-6" />
         </span>
 
-        <div className="flex flex-col">
-          <p className="font-medium text-slate-900 dark:text-slate-100">
-            {item.title}
+        {/* Text Details */}
+        <div className="flex flex-col gap-0.5 min-w-0 flex-1">
+          <p className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100 sm:text-base">
+            {item.note || item.category?.name || "Transaksi"}
           </p>
 
-          <div className="flex items-center gap-2 text-sm mt-1">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            {/* Category Badge */}
             <span
-              className={`px-2 py-0.5 rounded-full text-xs font-medium capitalize ${badgeColor}`}
+              className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide sm:text-xs ${badgeColor}`}
             >
-              {item.category}
+              {item.category?.name || "Uncategorized"}
             </span>
 
-            <span className="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400">
-              <FaRegCalendarAlt aria-hidden className="h-3.5 w-3.5" />
+            {/* Date */}
+            <span className="flex items-center gap-1 truncate text-[10px] text-slate-500 dark:text-slate-400 sm:text-xs">
+              <Calendar aria-hidden className="h-3 w-3 shrink-0" />
               <span>{formatDateTimeID(item.date)}</span>
             </span>
           </div>
         </div>
       </div>
 
-      <div className="text-right">
-        <p className={`font-semibold tabular-nums ${className}`}>{text}</p>
+      {/* RIGHT SECTION: Price */}
+      <div className="text-right shrink-0 pl-1">
+        <p
+          className={`text-sm font-bold tabular-nums sm:text-base ${className}`}
+        >
+          {text}
+        </p>
       </div>
     </div>
   );

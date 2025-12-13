@@ -19,7 +19,8 @@ import {
   ChartTooltip,
 } from "~/components/ui/chart";
 import { useMediaQuery } from "~/hooks/use-media-query";
-import { formatCurrency, type Transaction } from "~/lib/utils";
+import { formatCurrency } from "~/lib/utils";
+import type { Transaction } from "~/types/database";
 import { CustomChartTooltip } from "./CustomChartTooltip";
 
 const chartConfig = {
@@ -55,7 +56,7 @@ export function IncomeExpenseChart({ data }: { data: Transaction[] }) {
         const monthKey = format(tx.date, "yyyy-MM");
         const entry = monthlyMap.get(monthKey);
         if (entry) {
-          if (tx.type === "INCOME") {
+          if (tx.type === "Income") {
             entry.income += tx.amount;
           } else {
             entry.expense += tx.amount;

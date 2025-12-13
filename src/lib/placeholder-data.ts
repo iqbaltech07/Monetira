@@ -1,11 +1,12 @@
 import { subMonths } from "date-fns";
-import type { Transaction } from "./utils";
 import { Car, Film, Landmark, Salad, ShoppingBag } from "lucide-react";
 
 const today = new Date();
 
-export const mockTransactions: Transaction[] = [
-  // --- Bulan Ini (September 2025) ---
+// =========================================
+// 1. DATA UNTUK CHART DASHBOARD
+// =========================================
+export const mockTransactions = [
   {
     date: new Date(),
     type: "INCOME",
@@ -24,8 +25,6 @@ export const mockTransactions: Transaction[] = [
     amount: 750_000,
     description: "Belanja Bulanan",
   },
-
-  // --- 1 Bulan Lalu (Agustus 2025) ---
   {
     date: subMonths(today, 1),
     type: "INCOME",
@@ -38,77 +37,12 @@ export const mockTransactions: Transaction[] = [
     amount: 3_200_000,
     description: "Cicilan Kendaraan",
   },
-  {
-    date: subMonths(today, 1),
-    type: "EXPENSE",
-    amount: 1_200_000,
-    description: "Tagihan Kartu Kredit",
-  },
-
-  // --- 2 Bulan Lalu (Juli 2025) ---
-  {
-    date: subMonths(today, 2),
-    type: "INCOME",
-    amount: 9_200_000,
-    description: "Gaji & Bonus Proyek",
-  },
-  {
-    date: subMonths(today, 2),
-    type: "EXPENSE",
-    amount: 850_000,
-    description: "Langganan & Utilitas (Netflix, Listrik)",
-  },
-
-  // --- 3 Bulan Lalu (Juni 2025) ---
-  {
-    date: subMonths(today, 3),
-    type: "INCOME",
-    amount: 8_000_000,
-    description: "Gaji Bulanan Juni",
-  },
-  {
-    date: subMonths(today, 3),
-    type: "EXPENSE",
-    amount: 6_000_000,
-    description: "Biaya Liburan",
-  },
-
-  // --- 4 Bulan Lalu (Mei 2025) ---
-  {
-    date: subMonths(today, 4),
-    type: "INCOME",
-    amount: 8_000_000,
-    description: "Gaji Bulanan Mei",
-  },
-  {
-    date: subMonths(today, 4),
-    type: "EXPENSE",
-    amount: 1_500_000,
-    description: "Makan & Transportasi",
-  },
-
-  // --- 5 Bulan Lalu (April 2025) ---
-  {
-    date: subMonths(today, 5),
-    type: "INCOME",
-    amount: 8_500_000,
-    description: "Gaji & Uang Lembur",
-  },
-  {
-    date: subMonths(today, 5),
-    type: "EXPENSE",
-    amount: 2_100_000,
-    description: "Belanja Online",
-  },
 ];
 
-export type CategoryExpense = {
-  category: string;
-  value: number;
-  color: string;
-};
-
-export const mockCategoryExpenses: CategoryExpense[] = [
+// =========================================
+// 2. DATA UNTUK PIE CHART KATEGORI
+// =========================================
+export const mockCategoryExpenses = [
   { category: "Makanan", value: 2000000, color: "var(--chart-1)" },
   { category: "Transportasi", value: 1500000, color: "var(--chart-2)" },
   { category: "Hiburan", value: 500000, color: "var(--chart-3)" },
@@ -116,85 +50,116 @@ export const mockCategoryExpenses: CategoryExpense[] = [
   { category: "Lainnya", value: 1000000, color: "var(--chart-5)" },
 ];
 
-export type SavingsGoal = {
-  title: string;
-  currentAmount: number;
-  targetAmount: number;
-  targetDate: Date;
-};
+// =========================================
+// 3. DATA SAVINGS (VERSI BARU - PAGE SAVINGS)
+// Digunakan di: src/app/(protected)/savings/page.tsx
+// =========================================
+export const mockSavingsData = [
+  {
+    id: "sav_001",
+    name: "Liburan ke Bali",
+    targetAmount: 20000000,
+    currentAmount: 5500000,
+    deadline: "2025-12-25",
+    emoji: "🌴",
+    status: "Active" as const,
+  },
+  {
+    id: "sav_002",
+    name: "MacBook Pro M3",
+    targetAmount: 30000000,
+    currentAmount: 28500000,
+    deadline: "2025-06-30",
+    emoji: "💻",
+    status: "Active" as const,
+  },
+  {
+    id: "sav_003",
+    name: "Dana Darurat",
+    targetAmount: 50000000,
+    currentAmount: 50000000,
+    deadline: undefined,
+    emoji: "🛡️",
+    status: "Completed" as const,
+  },
+];
 
-export const mockSavingsGoals: SavingsGoal[] = [
+// =========================================
+// 4. DATA SAVINGS GOALS (VERSI LAMA - DASHBOARD)
+// Digunakan di: src/app/(protected)/dashboard/page.tsx (Mungkin)
+// Kita pertahankan ini agar dashboard tidak error
+// =========================================
+export const mockSavingsGoals = [
   {
     title: "Liburan ke Bali",
-    currentAmount: 8_500_000,
-    targetAmount: 15_000_000,
-    targetDate: new Date("2025-12-31"),
+    currentAmount: 5_500_000,
+    targetAmount: 20_000_000,
+    targetDate: new Date("2025-12-25"),
   },
   {
     title: "Emergency Fund",
-    currentAmount: 32_000_000,
+    currentAmount: 50_000_000,
     targetAmount: 50_000_000,
     targetDate: new Date("2026-06-30"),
   },
   {
     title: "Laptop Baru",
-    currentAmount: 15_000_000,
-    targetAmount: 20_000_000,
+    currentAmount: 28_500_000,
+    targetAmount: 30_000_000,
     targetDate: new Date("2025-09-30"),
   },
 ];
 
-export type DetailedTransaction = {
-  id: string;
-  type: "INCOME" | "EXPENSE";
-  amount: number;
-  description: string;
-  date: Date;
-  category: {
-    name: string;
-    icon: React.ElementType;
-  };
-};
-
-export const mockDetailedTransactions: DetailedTransaction[] = [
+// =========================================
+// 5. DATA TRANSAKSI DETAIL (VERSI BARU)
+// Digunakan di: TransactionRowHistory
+// =========================================
+export const mockDetailedTransactions = [
   {
     id: "1",
-    type: "INCOME",
+    type: "income" as const,
     amount: 7500000,
-    description: "Gaji Bulanan",
-    date: new Date("2025-09-01"),
-    category: { name: "Gaji", icon: Landmark },
+    title: "Gaji Bulanan",
+    date: new Date("2025-09-01T09:00:00").toISOString(),
+    category: "gaji" as const,
+    icon: Landmark,
   },
   {
     id: "2",
-    type: "EXPENSE",
+    type: "expense" as const,
     amount: 85000,
-    description: "Makan Siang",
-    date: new Date("2025-09-25"),
-    category: { name: "Makanan", icon: Salad },
+    title: "Makan Siang",
+    date: new Date("2025-09-25T12:30:00").toISOString(),
+    category: "makanan" as const,
+    icon: Salad,
   },
   {
     id: "3",
-    type: "EXPENSE",
+    type: "expense" as const,
     amount: 150000,
-    description: "Nonton Bioskop",
-    date: new Date("2025-09-24"),
-    category: { name: "Hiburan", icon: Film },
+    title: "Nonton Bioskop",
+    date: new Date("2025-09-24T19:00:00").toISOString(),
+    category: "hiburan" as const,
+    icon: Film,
   },
   {
     id: "4",
-    type: "EXPENSE",
+    type: "expense" as const,
     amount: 50000,
-    description: "Bensin Motor",
-    date: new Date("2025-09-23"),
-    category: { name: "Transportasi", icon: Car },
+    title: "Bensin Motor",
+    date: new Date("2025-09-23T08:00:00").toISOString(),
+    category: "transportasi" as const,
+    icon: Car,
   },
   {
     id: "5",
-    type: "EXPENSE",
+    type: "expense" as const,
     amount: 450000,
-    description: "Beli Baju",
-    date: new Date("2025-09-22"),
-    category: { name: "Belanja", icon: ShoppingBag },
+    title: "Beli Baju",
+    date: new Date("2025-09-22T15:45:00").toISOString(),
+    category: "tagihan" as const,
+    icon: ShoppingBag,
   },
 ];
+
+export type DetailedTransaction = (typeof mockDetailedTransactions)[number];

@@ -10,10 +10,10 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "~/components/ui/chart";
-import type { CategoryExpense } from "~/lib/placeholder-data";
+import type { mockCategoryExpenses } from "~/lib/placeholder-data";
 
 interface ExpenseCategoryChartProps {
-  data: CategoryExpense[];
+  data: typeof mockCategoryExpenses;
 }
 
 export function ExpenseCategoryChart({ data }: ExpenseCategoryChartProps) {

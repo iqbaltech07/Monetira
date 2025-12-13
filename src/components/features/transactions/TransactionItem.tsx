@@ -12,8 +12,8 @@ const formatIDR = (amount: number) => {
 };
 
 export function TransactionItem({ tx }: { tx: DetailedTransaction }) {
-  const Icon = tx.category.icon;
-  const isIncome = tx.type === "INCOME";
+  const Icon = tx.icon;
+  const isIncome = tx.type === "income";
 
   return (
     <div className="flex items-center justify-between gap-4 py-3">
@@ -22,7 +22,7 @@ export function TransactionItem({ tx }: { tx: DetailedTransaction }) {
           <Icon className="h-5 w-5 text-muted-foreground" />
         </div>
         <div>
-          <p className="font-medium">{tx.description}</p>
+          <p className="font-medium">{tx.title}</p>
           <p className="text-xs text-muted-foreground">
             {format(tx.date, "d MMMM yyyy", { locale: id })}
           </p>

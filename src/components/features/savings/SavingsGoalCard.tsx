@@ -1,11 +1,13 @@
 import { Target } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
-import { mockSavingsGoals } from "~/lib/placeholder-data";
+import type { Saving } from "~/types/database";
 import { SavingsGoalItem } from "./SavingsGoalItem";
 
-export function SavingsGoalCard() {
-  const savingsGoals = mockSavingsGoals;
+interface SavingsGoalCardProps {
+  savings: Saving[];
+}
 
+export function SavingsGoalCard({ savings }: SavingsGoalCardProps) {
   return (
     <Card className="shadow-slate-300/40 shadow-xl border-0">
       <CardHeader>
@@ -16,8 +18,8 @@ export function SavingsGoalCard() {
       </CardHeader>
       <CardContent>
         <div className="space-y-6">
-          {savingsGoals.map((goal) => (
-            <SavingsGoalItem key={goal.title} goal={goal} />
+          {savings.map((goal) => (
+            <SavingsGoalItem key={goal.id} goal={goal} />
           ))}
         </div>
       </CardContent>

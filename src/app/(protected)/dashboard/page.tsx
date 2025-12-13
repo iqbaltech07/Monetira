@@ -1,90 +1,29 @@
-import { BiSolidWallet } from "react-icons/bi";
-import { FaArrowTrendDown, FaArrowTrendUp } from "react-icons/fa6";
-import { ExpenseCategoryCard } from "~/components/features/dashboard/ExpenseCategoryCard";
-import { IncomeExpenseChart } from "~/components/features/dashboard/IncomeExpenseChart";
-import { SavingsGoalCard } from "~/components/features/savings/SavingsGoalCard";
-import type { StatCardProps } from "~/components/shared/StatCard";
-import { StatCard } from "~/components/shared/StatCard";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "~/components/ui/card";
-import { mockTransactions } from "~/lib/placeholder-data";
-import type { Transaction } from "~/lib/utils";
-
-const summaryData: StatCardProps[] = [
-  {
-    title: "Total Saldo",
-    description: "Total dana Anda saat ini.",
-    amount: "Rp. 1.300.700.000",
-    icon: BiSolidWallet,
-    variant: "primary",
-    change: "+13.5%",
-    changeColor: "primary",
-    changeDescription: "dari bulan lalu",
-  },
-  {
-    title: "Pemasukan",
-    description: "Pendapatan bulan ini.",
-    amount: "Rp 799.500.000",
-    icon: FaArrowTrendUp,
-    variant: "success",
-    change: "+5.5%",
-    changeColor: "success",
-    changeDescription: "dari bulan lalu",
-  },
-  {
-    title: "Pengeluaran",
-    description: "Pengeluaran bulan ini.",
-    amount: "Rp 103.250.000",
-    icon: FaArrowTrendDown,
-    variant: "danger",
-    change: "+2.5%",
-    changeColor: "danger",
-    changeDescription: "dari bulan lalu",
-  },
-];
-
-const getTransactions = async (): Promise<Transaction[]> => {
-  console.log("Menggunakan mock data untuk development.");
-  return mockTransactions;
-};
+import { DashboardContent } from "~/components/features/dashboard/DashboardContent";
+import { getCategories, getSavings, getTransactions } from "~/lib/dummy-data";
 
 export default async function DashboardPage() {
-  const transactions = await getTransactions();
+  const [transactions, savings] = await Promise.all([
+    getTransactions(),
+    getSavings(),
+    getCategories(),
+  ]);
+
+  // Calculate total balance from all transactions
+  const totalIncome = transactions
+    .filter((t) => t.type === "Income")
+    .reduce((acc, curr) => acc + curr.amount, 0);
+
+  const totalExpense = transactions
+    .filter((t) => t.type === "Expense")
+    .reduce((acc, curr) => acc + curr.amount, 0);
+
+  const userBalance = totalIncome - totalExpense;
 
   return (
-    <div className="flex flex-col gap-6 md:gap-8">
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:grid-cols-3">
-        {summaryData.map((item) => (
-          <StatCard key={item.title} {...item} />
-        ))}
-      </div>
-
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-8">
-        <div className="min-w-0 lg:col-span-7">
-          <Card className="h-full shadow-xl shadow-slate-300/40 border-0">
-            <CardHeader>
-              <CardTitle>Grafik Pemasukan dan Pengeluaran</CardTitle>
-              <CardDescription>Ringkasan 6 bulan terakhir.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <IncomeExpenseChart data={transactions} />
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="min-w-0 lg:col-span-5">
-          <ExpenseCategoryCard />
-        </div>
-
-        <div className="lg:col-span-12">
-          <SavingsGoalCard />
-        </div>
-      </div>
-    </div>
+    <DashboardContent
+      transactions={transactions}
+      savings={savings}
+      userBalance={userBalance}
+    />
   );
 }

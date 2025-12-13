@@ -1,36 +1,150 @@
-import { Edit3, Trash2 } from "lucide-react";
+"use client";
 
-const BadgeCard = ({ name, bgColor }: { name: string; bgColor: string }) => {
+import { Edit3, Trash2, CalendarDays, Target } from "lucide-react";
+import { formatCurrency } from "~/lib/utils";
+import { Progress } from "~/components/ui/progress";
+import type { Saving, SavingStatus } from "~/types/database";
+
+interface SavingCardProps {
+  item: Saving;
+  onEdit?: (id: string) => void;
+  onDelete?: (id: string) => void;
+}
+
+/* =========================
+ * Helper Components
+ * ========================= */
+
+const StatusBadge = ({ status }: { status: SavingStatus }) => {
+  const styles = {
+    Active:
+      "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
+    Completed:
+      "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+    Cancelled:
+      "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400",
+  };
+
   return (
-    <div
-      className={`rounded-full py-1 px-3 text-xs text-purple-600 ${bgColor}`}
+    <span
+      className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide ${styles[status]}`}
     >
-      {name}
-    </div>
+      {status}
+    </span>
   );
 };
 
-const SavingCard = () => {
+/* =========================
+ * Main Component
+ * ========================= */
+
+const SavingCard = ({ item, onEdit, onDelete }: SavingCardProps) => {
+  // Hitung persentase progress (cegah pembagian nol)
+  const progress =
+    item.target_amount > 0
+      ? Math.min((item.current_amount / item.target_amount) * 100, 100)
+      : 0;
+
+  // Hitung sisa hari (jika deadline ada)
+  const getDaysLeft = () => {
+    if (!item.deadline) return null;
+    const today = new Date();
+    const deadlineDate = new Date(item.deadline);
+    const diffTime = deadlineDate.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays > 0 ? `${diffDays} hari lagi` : "Jatuh tempo";
+  };
+
   return (
-    <div className="p-4 rounded-xl border bg-white">
-      <div className="flex justify-between">
-        <div className="">
-          <h2 className="text-lg">Liburan ke Bali</h2>
-          <p className="text-gray-500 text-sm">
-            Tabungan untuk liburan keluarga ke Bali
-          </p>
+    <div className="group relative flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
+      {/* HEADER: Emoji + Title + Actions */}
+      <div className="flex justify-between items-start mb-4">
+        <div className="flex items-start gap-3">
+          {/* Emoji Container */}
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-50 text-2xl shadow-inner dark:bg-slate-800">
+            {item.emoji || "💰"}
+          </div>
+
+          <div>
+            <h3 className="font-bold text-slate-900 dark:text-slate-100 line-clamp-1">
+              {item.name}
+            </h3>
+            <div className="flex items-center gap-2 mt-1">
+              <StatusBadge status={item.status} />
+              {item.deadline && (
+                <span className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
+                  <CalendarDays className="h-3 w-3" />
+                  {getDaysLeft()}
+                </span>
+              )}
+            </div>
+          </div>
         </div>
-        <div className="mx-2 flex items-center gap-4">
-          <button type="button">
-            <Edit3 size={18} />
+
+        {/* Action Buttons (Opacity 0 -> 100 on hover untuk kesan bersih) */}
+        <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-200">
+          <button
+            type="button"
+            onClick={() => onEdit?.(item.id)}
+            className="p-2 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+            title="Edit Tabungan"
+          >
+            <Edit3 size={16} />
           </button>
-          <button type="button">
-            <Trash2 size={18} color="red" />
+          <button
+            type="button"
+            onClick={() => onDelete?.(item.id)}
+            className="p-2 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+            title="Hapus Tabungan"
+          >
+            <Trash2 size={16} />
           </button>
         </div>
       </div>
-      <div className="flex items-center gap-2 my-3 font-semibold">
-        <BadgeCard name="Liburan" bgColor="bg-purple-200" />
+
+      {/* BODY: Money Info */}
+      <div className="mb-4 space-y-1">
+        <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+          Terkumpul
+        </p>
+        <div className="flex items-baseline gap-1">
+          <span className="text-2xl font-bold text-slate-900 dark:text-white">
+            {formatCurrency(item.current_amount)}
+          </span>
+          <span className="text-sm text-slate-400 font-medium">
+            / {formatCurrency(item.target_amount)}
+          </span>
+        </div>
+      </div>
+
+      {/* FOOTER: Progress Bar */}
+      <div className="space-y-2">
+        <div className="flex justify-between text-xs font-medium">
+          <span
+            className={progress >= 100 ? "text-emerald-600" : "text-blue-600"}
+          >
+            {progress.toFixed(1)}%
+          </span>
+          {progress < 100 ? (
+            <span className="text-slate-400">
+              Kurang {formatCurrency(item.target_amount - item.current_amount)}
+            </span>
+          ) : (
+            <span className="text-emerald-600 flex items-center gap-1">
+              <Target size={12} /> Tercapai!
+            </span>
+          )}
+        </div>
+
+        {/* Progress Component (Shadcn UI) */}
+        <Progress
+          value={progress}
+          className="h-2.5 bg-slate-100 dark:bg-slate-800"
+          // Tips: Anda bisa custom color indicator di global.css atau inline style jika perlu warna dinamis
+          indicatorClassName={
+            progress >= 100 ? "bg-emerald-500" : "bg-blue-600"
+          }
+        />
       </div>
     </div>
   );

@@ -2,76 +2,52 @@ import { BiMoney } from "react-icons/bi";
 import { FaArrowTrendDown, FaArrowTrendUp } from "react-icons/fa6";
 import ButtonNewTransaction from "~/components/features/transactions/ButtonNewTransaction";
 import SearchFilterTransaction from "~/components/features/transactions/SearchFilterTransaction";
-import TransactionRowHistory, {
-  type HistoryTransaction,
-} from "~/components/features/transactions/TransactionRowHistory";
+import TransactionRowHistory from "~/components/features/transactions/TransactionRowHistory";
 import type { StatCardProps } from "~/components/shared/StatCard";
 import { StatCard } from "~/components/shared/StatCard";
+import { getCategories, getTransactions } from "~/lib/dummy-data";
+import { formatCurrency } from "~/lib/utils";
 
-const summaryData: StatCardProps[] = [
-  {
-    title: "Total Pemasukan",
-    description: "Semua dana masuk pada periode ini.",
-    amount: "Rp 200.500.000",
-    icon: FaArrowTrendUp,
-    variant: "success",
-  },
-  {
-    title: "Total Pengeluaran",
-    description: "Semua dana keluar pada periode ini.",
-    amount: "Rp 3.000.000",
-    icon: FaArrowTrendDown,
-    variant: "danger",
-  },
-  {
-    title: "Net Flow",
-    description: "Selisih pemasukan dan pengeluaran.",
-    amount: "Rp 4.500.000",
-    icon: BiMoney,
-    variant: "primary",
-  },
-];
+export default async function TransactionPage() {
+  const [transactions, categories] = await Promise.all([
+    getTransactions(),
+    getCategories(),
+  ]);
 
-const historyTransactions: HistoryTransaction[] = [
-  {
-    id: "trx_1",
-    title: "Gaji Bulanan",
-    category: "gaji",
-    icon: FaArrowTrendUp,
-    type: "income",
-    amount: 15_000_000,
-    date: "2025-10-01T09:30:00+07:00",
-  },
-  {
-    id: "trx_2",
-    title: "Makan Siang",
-    category: "makanan",
-    icon: FaArrowTrendDown,
-    type: "expense",
-    amount: 45_000,
-    date: "2025-10-03",
-  },
-  {
-    id: "trx_3",
-    title: "Project Freelance",
-    category: "freelance",
-    icon: FaArrowTrendUp,
-    type: "income",
-    amount: 3_500_000,
-    date: "2025-10-05",
-  },
-  {
-    id: "trx_4",
-    title: "Transport Online",
-    category: "transportasi",
-    icon: FaArrowTrendDown,
-    type: "expense",
-    amount: 27_000,
-    date: "2025-10-06",
-  },
-];
+  const totalIncome = transactions
+    .filter((t) => t.type === "Income")
+    .reduce((acc, curr) => acc + curr.amount, 0);
 
-export default function TransactionPage() {
+  const totalExpense = transactions
+    .filter((t) => t.type === "Expense")
+    .reduce((acc, curr) => acc + curr.amount, 0);
+
+  const netFlow = totalIncome - totalExpense;
+
+  const summaryData: StatCardProps[] = [
+    {
+      title: "Total Pemasukan",
+      description: "Semua dana masuk pada periode ini.",
+      amount: formatCurrency(totalIncome),
+      icon: FaArrowTrendUp,
+      variant: "success",
+    },
+    {
+      title: "Total Pengeluaran",
+      description: "Semua dana keluar pada periode ini.",
+      amount: formatCurrency(totalExpense),
+      icon: FaArrowTrendDown,
+      variant: "danger",
+    },
+    {
+      title: "Net Flow",
+      description: "Selisih pemasukan dan pengeluaran.",
+      amount: formatCurrency(netFlow),
+      icon: BiMoney,
+      variant: "primary",
+    },
+  ];
+
   return (
     <div>
       <div className="flex flex-col gap-4">
@@ -81,20 +57,20 @@ export default function TransactionPage() {
           ))}
         </div>
 
-        <div className="my-1 flex w-full gap-4">
+        <div className="my-1 flex flex-col-reverse md:flex-row w-full gap-4">
           <div className="flex items-center w-1/3">
-            <ButtonNewTransaction />
+            <ButtonNewTransaction categories={categories} />
           </div>
           <SearchFilterTransaction />
         </div>
 
-        <section className="rounded-lg bg-white py-4 px-6 shadow-xl shadow-slate-300/40 dark:bg-slate-900">
+        <section className="rounded-lg bg-white py-4 px-4 md:px-6 shadow-xl shadow-slate-300/40 dark:bg-slate-900">
           <h4 className="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-100">
             Riwayat Transaksi
           </h4>
 
           <div className="flex w-full flex-col gap-4">
-            {historyTransactions.map((tx) => (
+            {transactions.map((tx) => (
               <TransactionRowHistory key={tx.id} item={tx} />
             ))}
           </div>
