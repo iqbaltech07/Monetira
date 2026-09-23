@@ -1,14 +1,16 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ArrowDownRight,
   ArrowUpRight,
   Calculator,
   LineChart,
+  RefreshCw,
   Search,
   Star,
 } from "lucide-react";
+import Image from "next/image";
 import {
   Area,
   AreaChart,
@@ -17,6 +19,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { useGsapReveal } from "~/lib/gsap";
 import { INITIAL_MARKET_ASSETS } from "~/lib/store/initial-data";
@@ -28,13 +31,60 @@ export function MarketContent() {
   const containerRef = useGsapReveal<HTMLDivElement>({ stagger: 0.05, y: 15 });
   const { watchlist, toggleWatchlist, isWatchlisted } = useMonetira();
 
+  const [marketAssets, setMarketAssets] = useState<MarketAsset[]>(
+    INITIAL_MARKET_ASSETS,
+  );
   const [selectedCategory, setSelectedCategory] = useState<
     "ALL" | "Crypto" | "Stock" | "Commodity" | "WATCHLIST"
   >("ALL");
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedAsset, setSelectedAsset] = useState<MarketAsset>(
-    INITIAL_MARKET_ASSETS[0],
+  const [selectedAssetSymbol, setSelectedAssetSymbol] = useState<string>("BTC");
+
+  // Live CoinGecko state
+  const [isLoadingLive, setIsLoadingLive] = useState(false);
+  const [dataSource, setDataSource] = useState<"live" | "cache" | "mock">(
+    "mock",
   );
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+
+  // Fetch real-time crypto data from our CoinGecko-backed Next.js API
+  const fetchCryptoData = useCallback(async () => {
+    setIsLoadingLive(true);
+    try {
+      const res = await fetch("/api/market/crypto");
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+      const json = await res.json();
+      if (
+        json.success &&
+        Array.isArray(json.assets) &&
+        json.assets.length > 0
+      ) {
+        setDataSource(json.source || "live");
+        setLastUpdated(json.updatedAt || new Date().toISOString());
+
+        setMarketAssets((prev) => {
+          const nonCrypto = prev.filter((a) => a.category !== "Crypto");
+          return [...json.assets, ...nonCrypto];
+        });
+      }
+    } catch (err) {
+      console.error("CoinGecko market fetch failed:", err);
+    } finally {
+      setIsLoadingLive(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCryptoData();
+  }, [fetchCryptoData]);
+
+  // Selected asset
+  const selectedAsset = useMemo(() => {
+    return (
+      marketAssets.find((a) => a.symbol === selectedAssetSymbol) ||
+      marketAssets[0]
+    );
+  }, [marketAssets, selectedAssetSymbol]);
 
   // Converter state
   const [convertAmount, setConvertAmount] = useState<number>(1000000);
@@ -43,7 +93,7 @@ export function MarketContent() {
 
   // Filtered Assets
   const filteredAssets = useMemo(() => {
-    return INITIAL_MARKET_ASSETS.filter((asset) => {
+    return marketAssets.filter((asset) => {
       // Category filter
       if (selectedCategory === "WATCHLIST") {
         if (!watchlist.includes(asset.symbol)) return false;
@@ -66,12 +116,13 @@ export function MarketContent() {
 
       return true;
     });
-  }, [selectedCategory, searchQuery, watchlist]);
+  }, [marketAssets, selectedCategory, searchQuery, watchlist]);
 
   // Chart data for selected asset
   const chartData = useMemo(() => {
+    const len = selectedAsset.sparkline.length;
     return selectedAsset.sparkline.map((val, idx) => ({
-      time: `H-${6 - idx}`,
+      time: len > 10 ? `T-${len - idx}` : `H-${len - 1 - idx}`,
       price: val,
     }));
   }, [selectedAsset]);
@@ -84,7 +135,7 @@ export function MarketContent() {
     let amountInIDR = convertAmount;
     if (fromAsset === "USD") amountInIDR = convertAmount * 15850;
     else if (fromAsset !== "IDR") {
-      const asset = INITIAL_MARKET_ASSETS.find((a) => a.symbol === fromAsset);
+      const asset = marketAssets.find((a) => a.symbol === fromAsset);
       if (asset) amountInIDR = convertAmount * asset.price;
     }
 
@@ -92,13 +143,13 @@ export function MarketContent() {
     if (toAsset === "IDR") return amountInIDR;
     if (toAsset === "USD") return amountInIDR / 15850;
 
-    const target = INITIAL_MARKET_ASSETS.find((a) => a.symbol === toAsset);
+    const target = marketAssets.find((a) => a.symbol === toAsset);
     if (target && target.price > 0) {
       return amountInIDR / target.price;
     }
 
     return 0;
-  }, [convertAmount, fromAsset, toAsset]);
+  }, [marketAssets, convertAmount, fromAsset, toAsset]);
 
   return (
     <div ref={containerRef} className="space-y-6">
@@ -109,21 +160,60 @@ export function MarketContent() {
             <LineChart className="h-6 w-6 text-blue-600 dark:text-blue-400" />
             <span>Pasar Finansial & Aset</span>
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-            Pantau pergerakan harga kripto, saham IHSG, valuta asing, dan emas
-            secara terintegrasi.
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+            Pantau pergerakan harga kripto *real-time* via CoinGecko, saham
+            IHSG, valuta asing, dan komoditas.
           </p>
         </div>
 
-        {/* Search */}
-        <div className="relative w-full md:w-72">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-          <Input
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Cari simbol atau aset..."
-            className="pl-9 h-10 text-xs sm:text-sm bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-xl"
-          />
+        {/* Live status badge & Actions */}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300">
+            <span
+              className={`h-2 w-2 rounded-xs ${
+                dataSource === "live"
+                  ? "bg-emerald-500 animate-pulse"
+                  : "bg-blue-500"
+              }`}
+            />
+            <span className="border-b border-slate-300 dark:border-slate-700 pb-0.5 font-medium">
+              {dataSource === "live" ? "CoinGecko Live" : "Mode Standar"}
+            </span>
+            {lastUpdated && (
+              <span className="text-[11px] text-slate-400">
+                •{" "}
+                {new Date(lastUpdated).toLocaleTimeString("id-ID", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </span>
+            )}
+          </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={fetchCryptoData}
+            disabled={isLoadingLive}
+            className="h-9 rounded-xl text-xs gap-1.5 cursor-pointer"
+          >
+            <RefreshCw
+              className={`h-3.5 w-3.5 ${isLoadingLive ? "animate-spin text-blue-600" : ""}`}
+            />
+            <span>{isLoadingLive ? "Memuat..." : "Segarkan"}</span>
+          </Button>
+
+          {/* Search */}
+          <div className="relative w-full sm:w-60">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Cari simbol atau aset..."
+              className="pl-9 h-9 text-xs sm:text-sm bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-xl"
+            />
+          </div>
         </div>
       </div>
 
@@ -131,8 +221,18 @@ export function MarketContent() {
       <div className="gsap-fade-up rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
           <div className="flex items-center gap-3">
-            <div className="h-11 w-11 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-2xl shadow-inner">
-              {selectedAsset.icon || "📈"}
+            <div className="h-11 w-11 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-2xl shadow-inner shrink-0 overflow-hidden">
+              {selectedAsset.image ? (
+                <Image
+                  src={selectedAsset.image}
+                  alt={selectedAsset.name}
+                  width={36}
+                  height={36}
+                  className="h-9 w-9 object-contain"
+                />
+              ) : (
+                <span>{selectedAsset.icon || "📈"}</span>
+              )}
             </div>
             <div>
               <div className="flex items-center gap-2">
@@ -168,23 +268,59 @@ export function MarketContent() {
             <span className="text-2xl font-extrabold text-slate-900 dark:text-white tabular-nums">
               {formatCurrency(selectedAsset.price)}
             </span>
-            <div
-              className={`inline-flex items-center gap-1 text-xs font-bold ${
-                selectedAsset.change24h >= 0
-                  ? "text-emerald-600 dark:text-emerald-400"
-                  : "text-rose-600 dark:text-rose-400"
-              }`}
-            >
-              {selectedAsset.change24h >= 0 ? (
-                <ArrowUpRight className="h-3.5 w-3.5" />
-              ) : (
-                <ArrowDownRight className="h-3.5 w-3.5" />
-              )}
-              <span>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <span
+                className={`text-xs font-bold flex items-center gap-0.5 ${
+                  selectedAsset.change24h >= 0
+                    ? "text-emerald-600 dark:text-emerald-400"
+                    : "text-rose-600 dark:text-rose-400"
+                }`}
+              >
+                {selectedAsset.change24h >= 0 ? (
+                  <ArrowUpRight className="h-4 w-4" />
+                ) : (
+                  <ArrowDownRight className="h-4 w-4" />
+                )}
                 {selectedAsset.change24h >= 0 ? "+" : ""}
                 {selectedAsset.change24h}% (24 Jam)
               </span>
             </div>
+          </div>
+        </div>
+
+        {/* 24h High/Low Stats */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 border-b border-slate-100 dark:border-slate-800 pb-4">
+          <div>
+            <p className="text-[11px] font-semibold text-slate-400">
+              Tertinggi 24 Jam
+            </p>
+            <p className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 tabular-nums">
+              {formatCurrency(selectedAsset.high24h)}
+            </p>
+          </div>
+          <div>
+            <p className="text-[11px] font-semibold text-slate-400">
+              Terendah 24 Jam
+            </p>
+            <p className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 tabular-nums">
+              {formatCurrency(selectedAsset.low24h)}
+            </p>
+          </div>
+          <div>
+            <p className="text-[11px] font-semibold text-slate-400">
+              Total Volume
+            </p>
+            <p className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200">
+              {selectedAsset.volume}
+            </p>
+          </div>
+          <div>
+            <p className="text-[11px] font-semibold text-slate-400">
+              Satuan / Unit
+            </p>
+            <p className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200">
+              1 {selectedAsset.unit || selectedAsset.symbol}
+            </p>
           </div>
         </div>
 
@@ -217,7 +353,11 @@ export function MarketContent() {
                   if (active && payload && payload.length) {
                     return (
                       <div className="rounded-lg bg-slate-900 px-3 py-1.5 text-xs text-white shadow-lg">
-                        <p className="font-bold">Index: {payload[0]?.value}</p>
+                        <p className="font-bold">
+                          {typeof payload[0]?.value === "number"
+                            ? formatCurrency(payload[0].value)
+                            : payload[0]?.value}
+                        </p>
                       </div>
                     );
                   }
@@ -248,10 +388,7 @@ export function MarketContent() {
               { id: "Crypto" as const, label: "Kripto" },
               { id: "Stock" as const, label: "Saham Indonesia" },
               { id: "Commodity" as const, label: "Komoditas & Valas" },
-              {
-                id: "WATCHLIST" as const,
-                label: `Watchlist (${watchlist.length})`,
-              },
+              { id: "WATCHLIST" as const, label: "Watchlist Saya" },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -290,7 +427,7 @@ export function MarketContent() {
                     <button
                       type="button"
                       key={asset.symbol}
-                      onClick={() => setSelectedAsset(asset)}
+                      onClick={() => setSelectedAssetSymbol(asset.symbol)}
                       className={`w-full text-left flex items-center justify-between p-3.5 sm:px-4 cursor-pointer transition-colors ${
                         isSelected
                           ? "bg-blue-50/60 dark:bg-blue-950/20"
@@ -322,7 +459,17 @@ export function MarketContent() {
                             }`}
                           />
                         </span>
-                        <span className="text-xl shrink-0">{asset.icon}</span>
+                        {asset.image ? (
+                          <Image
+                            src={asset.image}
+                            alt={asset.name}
+                            width={24}
+                            height={24}
+                            className="h-6 w-6 rounded-md object-contain shrink-0"
+                          />
+                        ) : (
+                          <span className="text-xl shrink-0">{asset.icon}</span>
+                        )}
                         <div className="min-w-0">
                           <p className="font-bold text-slate-900 dark:text-slate-100 text-xs sm:text-sm truncate">
                             {asset.name}
@@ -390,9 +537,15 @@ export function MarketContent() {
                   >
                     <option value="IDR">IDR (Rp)</option>
                     <option value="USD">USD ($)</option>
-                    <option value="BTC">BTC</option>
-                    <option value="ETH">ETH</option>
-                    <option value="GOLD">Emas</option>
+                    {marketAssets
+                      .filter(
+                        (a) => a.category === "Crypto" || a.symbol === "GOLD",
+                      )
+                      .map((a) => (
+                        <option key={a.symbol} value={a.symbol}>
+                          {a.symbol}
+                        </option>
+                      ))}
                   </select>
                 </div>
               </div>
@@ -414,10 +567,11 @@ export function MarketContent() {
                   >
                     <option value="IDR">Rupiah (IDR)</option>
                     <option value="USD">US Dollar (USD)</option>
-                    <option value="GOLD">Emas Antam (Gram)</option>
-                    <option value="BTC">Bitcoin (BTC)</option>
-                    <option value="ETH">Ethereum (ETH)</option>
-                    <option value="BBCA">Saham BBCA (Lembar)</option>
+                    {marketAssets.map((a) => (
+                      <option key={a.symbol} value={a.symbol}>
+                        {a.name} ({a.symbol})
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -432,7 +586,7 @@ export function MarketContent() {
                     ? formatCurrency(convertedResult)
                     : toAsset === "USD"
                       ? `$ ${convertedResult.toLocaleString("en-US", { maximumFractionDigits: 2 })}`
-                      : `${convertedResult.toLocaleString("id-ID", { maximumFractionDigits: 4 })} ${toAsset}`}
+                      : `${convertedResult.toLocaleString("id-ID", { maximumFractionDigits: 6 })} ${toAsset}`}
                 </p>
                 <p className="text-[10px] text-slate-400 mt-1">
                   Berdasarkan kurs indikatif pasar terkini

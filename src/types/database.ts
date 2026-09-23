@@ -90,6 +90,7 @@ export interface MarketAsset {
   sparkline: number[];
   unit?: string;
   icon?: string;
+  image?: string;
 }
 
 export interface UserPreferences {
