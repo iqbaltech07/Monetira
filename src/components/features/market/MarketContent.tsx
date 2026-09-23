@@ -40,43 +40,87 @@ export function MarketContent() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedAssetSymbol, setSelectedAssetSymbol] = useState<string>("BTC");
 
-  // Live CoinGecko state
+  // Live status
   const [isLoadingLive, setIsLoadingLive] = useState(false);
   const [dataSource, setDataSource] = useState<"live" | "cache" | "mock">(
     "mock",
   );
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
 
-  // Fetch real-time crypto data from our CoinGecko-backed Next.js API
-  const fetchCryptoData = useCallback(async () => {
+  // Forex rates mapping to IDR (default baselines)
+  const [forexRates, setForexRates] = useState<Record<string, number>>({
+    IDR: 1,
+    USD: 17840,
+    EUR: 20430.6,
+    GBP: 23808.89,
+    SGD: 13989.96,
+    JPY: 113.35,
+    AUD: 12685.77,
+    CNY: 2657.33,
+    MYR: 4378.67,
+    SAR: 4757.33,
+  });
+
+  // Fetch real-time data from CoinGecko & ExchangeRate API
+  const fetchMarketData = useCallback(async () => {
     setIsLoadingLive(true);
     try {
-      const res = await fetch("/api/market/crypto");
-      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-      const json = await res.json();
-      if (
-        json.success &&
-        Array.isArray(json.assets) &&
-        json.assets.length > 0
-      ) {
-        setDataSource(json.source || "live");
-        setLastUpdated(json.updatedAt || new Date().toISOString());
+      const [cryptoRes, forexRes] = await Promise.allSettled([
+        fetch("/api/market/crypto"),
+        fetch("/api/market/forex"),
+      ]);
+
+      let newCryptoAssets: MarketAsset[] = [];
+      let newForexAssets: MarketAsset[] = [];
+
+      if (cryptoRes.status === "fulfilled" && cryptoRes.value.ok) {
+        const json = await cryptoRes.value.json();
+        if (json.success && Array.isArray(json.assets)) {
+          newCryptoAssets = json.assets;
+        }
+      }
+
+      if (forexRes.status === "fulfilled" && forexRes.value.ok) {
+        const json = await forexRes.value.json();
+        if (json.success && Array.isArray(json.assets)) {
+          newForexAssets = json.assets;
+        }
+        if (json.rates) {
+          setForexRates(json.rates);
+        }
+      }
+
+      if (newCryptoAssets.length > 0 || newForexAssets.length > 0) {
+        setDataSource("live");
+        setLastUpdated(new Date().toISOString());
 
         setMarketAssets((prev) => {
-          const nonCrypto = prev.filter((a) => a.category !== "Crypto");
-          return [...json.assets, ...nonCrypto];
+          // Keep stocks & gold from previous state
+          const stocksAndGold = prev.filter(
+            (a) => a.category !== "Crypto" && a.category !== "Forex",
+          );
+          const cryptoList =
+            newCryptoAssets.length > 0
+              ? newCryptoAssets
+              : prev.filter((a) => a.category === "Crypto");
+          const forexList =
+            newForexAssets.length > 0
+              ? newForexAssets
+              : prev.filter((a) => a.category === "Forex");
+
+          return [...cryptoList, ...stocksAndGold, ...forexList];
         });
       }
     } catch (err) {
-      console.error("CoinGecko market fetch failed:", err);
+      console.error("Market data fetch failed:", err);
     } finally {
       setIsLoadingLive(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchCryptoData();
-  }, [fetchCryptoData]);
+    fetchMarketData();
+  }, [fetchMarketData]);
 
   // Selected asset
   const selectedAsset = useMemo(() => {
@@ -89,7 +133,7 @@ export function MarketContent() {
   // Converter state
   const [convertAmount, setConvertAmount] = useState<number>(1000000);
   const [fromAsset, setFromAsset] = useState<string>("IDR");
-  const [toAsset, setToAsset] = useState<string>("GOLD");
+  const [toAsset, setToAsset] = useState<string>("USD");
 
   // Filtered Assets
   const filteredAssets = useMemo(() => {
@@ -127,21 +171,28 @@ export function MarketContent() {
     }));
   }, [selectedAsset]);
 
-  // Converter logic
+  // Converter logic using live forex & crypto prices
   const convertedResult = useMemo(() => {
     if (!convertAmount || convertAmount <= 0) return 0;
 
     // Convert from source to IDR first
     let amountInIDR = convertAmount;
-    if (fromAsset === "USD") amountInIDR = convertAmount * 15850;
-    else if (fromAsset !== "IDR") {
+    if (fromAsset === "IDR") {
+      amountInIDR = convertAmount;
+    } else if (forexRates[fromAsset]) {
+      amountInIDR = convertAmount * forexRates[fromAsset];
+    } else {
       const asset = marketAssets.find((a) => a.symbol === fromAsset);
-      if (asset) amountInIDR = convertAmount * asset.price;
+      if (asset && asset.price > 0) {
+        amountInIDR = convertAmount * asset.price;
+      }
     }
 
     // Convert from IDR to target asset
     if (toAsset === "IDR") return amountInIDR;
-    if (toAsset === "USD") return amountInIDR / 15850;
+    if (forexRates[toAsset] && forexRates[toAsset] > 0) {
+      return amountInIDR / forexRates[toAsset];
+    }
 
     const target = marketAssets.find((a) => a.symbol === toAsset);
     if (target && target.price > 0) {
@@ -149,7 +200,7 @@ export function MarketContent() {
     }
 
     return 0;
-  }, [marketAssets, convertAmount, fromAsset, toAsset]);
+  }, [marketAssets, forexRates, convertAmount, fromAsset, toAsset]);
 
   return (
     <div ref={containerRef} className="space-y-6">
@@ -161,8 +212,8 @@ export function MarketContent() {
             <span>Pasar Finansial & Aset</span>
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-            Pantau pergerakan harga kripto *real-time* via CoinGecko, saham
-            IHSG, valuta asing, dan komoditas.
+            Pantau pergerakan harga kripto *real-time* via CoinGecko, valuta
+            asing via ExchangeRate-API, saham IHSG, dan komoditas.
           </p>
         </div>
 
@@ -177,7 +228,9 @@ export function MarketContent() {
               }`}
             />
             <span className="border-b border-slate-300 dark:border-slate-700 pb-0.5 font-medium">
-              {dataSource === "live" ? "CoinGecko Live" : "Mode Standar"}
+              {dataSource === "live"
+                ? "CoinGecko & ExchangeRate Live"
+                : "Mode Standar"}
             </span>
             {lastUpdated && (
               <span className="text-[11px] text-slate-400">
@@ -194,7 +247,7 @@ export function MarketContent() {
             type="button"
             variant="outline"
             size="sm"
-            onClick={fetchCryptoData}
+            onClick={fetchMarketData}
             disabled={isLoadingLive}
             className="h-9 rounded-xl text-xs gap-1.5 cursor-pointer"
           >
@@ -509,7 +562,7 @@ export function MarketContent() {
           <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900">
             <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2 mb-4">
               <Calculator className="h-4 w-4 text-blue-600" />
-              <span>Kalkulator Konversi</span>
+              <span>Kalkulator Konversi Real-Time</span>
             </h3>
 
             <div className="space-y-3.5">
@@ -533,19 +586,27 @@ export function MarketContent() {
                   <select
                     value={fromAsset}
                     onChange={(e) => setFromAsset(e.target.value)}
-                    className="w-24 px-2 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-bold dark:border-slate-800 dark:bg-slate-800"
+                    className="w-28 px-2 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-bold dark:border-slate-800 dark:bg-slate-800"
                   >
-                    <option value="IDR">IDR (Rp)</option>
-                    <option value="USD">USD ($)</option>
-                    {marketAssets
-                      .filter(
-                        (a) => a.category === "Crypto" || a.symbol === "GOLD",
-                      )
-                      .map((a) => (
-                        <option key={a.symbol} value={a.symbol}>
-                          {a.symbol}
-                        </option>
-                      ))}
+                    <optgroup label="Valuta Asing">
+                      <option value="IDR">IDR (Rp)</option>
+                      <option value="USD">USD ($)</option>
+                      <option value="EUR">EUR (€)</option>
+                      <option value="SGD">SGD (S$)</option>
+                      <option value="JPY">JPY (¥)</option>
+                      <option value="GBP">GBP (£)</option>
+                      <option value="AUD">AUD (A$)</option>
+                      <option value="MYR">MYR (RM)</option>
+                      <option value="SAR">SAR (SR)</option>
+                    </optgroup>
+                    <optgroup label="Kripto & Emas">
+                      <option value="GOLD">Emas (Gram)</option>
+                      <option value="BTC">Bitcoin (BTC)</option>
+                      <option value="ETH">Ethereum (ETH)</option>
+                      <option value="SOL">Solana (SOL)</option>
+                      <option value="BNB">BNB</option>
+                      <option value="XRP">XRP</option>
+                    </optgroup>
                   </select>
                 </div>
               </div>
@@ -565,13 +626,30 @@ export function MarketContent() {
                     onChange={(e) => setToAsset(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs font-bold dark:border-slate-800 dark:bg-slate-800"
                   >
-                    <option value="IDR">Rupiah (IDR)</option>
-                    <option value="USD">US Dollar (USD)</option>
-                    {marketAssets.map((a) => (
-                      <option key={a.symbol} value={a.symbol}>
-                        {a.name} ({a.symbol})
-                      </option>
-                    ))}
+                    <optgroup label="Valuta Asing">
+                      <option value="IDR">Rupiah Indonesia (IDR)</option>
+                      <option value="USD">US Dollar (USD)</option>
+                      <option value="EUR">Euro (EUR)</option>
+                      <option value="SGD">Singapore Dollar (SGD)</option>
+                      <option value="JPY">Japanese Yen (JPY)</option>
+                      <option value="GBP">British Pound (GBP)</option>
+                      <option value="AUD">Australian Dollar (AUD)</option>
+                      <option value="MYR">Malaysian Ringgit (MYR)</option>
+                      <option value="SAR">Saudi Riyal (SAR)</option>
+                    </optgroup>
+                    <optgroup label="Kripto">
+                      <option value="BTC">Bitcoin (BTC)</option>
+                      <option value="ETH">Ethereum (ETH)</option>
+                      <option value="SOL">Solana (SOL)</option>
+                      <option value="BNB">BNB</option>
+                      <option value="XRP">Ripple (XRP)</option>
+                    </optgroup>
+                    <optgroup label="Komoditas & Saham">
+                      <option value="GOLD">Emas Antam (Gram)</option>
+                      <option value="BBCA">Saham BBCA (Lembar)</option>
+                      <option value="BBRI">Saham BBRI (Lembar)</option>
+                      <option value="BMRI">Saham BMRI (Lembar)</option>
+                    </optgroup>
                   </select>
                 </div>
               </div>
@@ -579,17 +657,32 @@ export function MarketContent() {
               {/* Hasil Estimasi */}
               <div className="rounded-xl bg-blue-50/60 p-3.5 border border-blue-100 dark:bg-blue-950/20 dark:border-blue-900/40">
                 <p className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide">
-                  Hasil Estimasi
+                  Hasil Estimasi Real-Time
                 </p>
                 <p className="text-xl font-extrabold text-slate-900 dark:text-white tabular-nums mt-0.5">
                   {toAsset === "IDR"
                     ? formatCurrency(convertedResult)
-                    : toAsset === "USD"
-                      ? `$ ${convertedResult.toLocaleString("en-US", { maximumFractionDigits: 2 })}`
-                      : `${convertedResult.toLocaleString("id-ID", { maximumFractionDigits: 6 })} ${toAsset}`}
+                    : [
+                          "USD",
+                          "EUR",
+                          "GBP",
+                          "SGD",
+                          "JPY",
+                          "AUD",
+                          "MYR",
+                          "SAR",
+                          "CNY",
+                        ].includes(toAsset)
+                      ? `${toAsset} ${convertedResult.toLocaleString("en-US", {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 4,
+                        })}`
+                      : `${convertedResult.toLocaleString("id-ID", {
+                          maximumFractionDigits: 6,
+                        })} ${toAsset}`}
                 </p>
                 <p className="text-[10px] text-slate-400 mt-1">
-                  Berdasarkan kurs indikatif pasar terkini
+                  Kurs resmi ExchangeRate-API & CoinGecko
                 </p>
               </div>
             </div>
