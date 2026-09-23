@@ -4,22 +4,20 @@ import { NavLinks } from "./NavLinks";
 
 export function Sidebar() {
   return (
-    <aside className="hidden w-64 flex-shrink-0 bg-white dark:bg-gray-800 md:block">
+    <aside className="hidden w-64 shrink-0 border-r border-slate-200/80 bg-white dark:border-slate-800 dark:bg-slate-900 md:block">
       <div className="flex h-full flex-col">
-        <div className="flex h-20 items-center p-4">
-          <Link
-            href="/dashboard"
-            className="text-2xl font-bold text-gray-900 dark:text-white"
-          >
+        <div className="flex h-16 items-center px-6 border-b border-slate-100 dark:border-slate-800/60">
+          <Link href="/dashboard" className="flex items-center gap-2">
             <Image
               src={"/images/monetira-icon-desc.svg"}
               alt="monetira-icon"
-              width={200}
-              height={50}
+              width={160}
+              height={40}
+              priority
             />
           </Link>
         </div>
-        <nav className="mt-4 flex-1 p-4">
+        <nav className="flex-1 px-4 py-6">
           <NavLinks />
         </nav>
       </div>

@@ -102,5 +102,3 @@ export function IncomeExpenseChart({ data }: { data: Transaction[] }) {
     </ChartContainer>
   );
 }
-
-console.log("Hello World");

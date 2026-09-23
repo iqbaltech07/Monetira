@@ -27,7 +27,7 @@ const StatusBadge = ({ status }: { status: SavingStatus }) => {
 
   return (
     <span
-      className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide ${styles[status]}`}
+      className={`px-2.5 py-0.5 rounded-full text-xs font-medium uppercase tracking-wide ${styles[status]}`}
     >
       {status}
     </span>
@@ -56,12 +56,12 @@ const SavingCard = ({ item, onEdit, onDelete }: SavingCardProps) => {
   };
 
   return (
-    <div className="group relative flex flex-col justify-between rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
+    <div className="group relative flex flex-col justify-between rounded-xl border border-slate-200/80 bg-white p-5 shadow-sm transition-all hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
       {/* HEADER: Emoji + Title + Actions */}
       <div className="flex justify-between items-start mb-4">
         <div className="flex items-start gap-3">
           {/* Emoji Container */}
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-50 text-2xl shadow-inner dark:bg-slate-800">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-50 text-xl shadow-inner dark:bg-slate-800">
             {item.emoji || "💰"}
           </div>
 

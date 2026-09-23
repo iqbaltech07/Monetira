@@ -24,42 +24,45 @@ export function Navbar() {
     : "Halaman Tidak Ditemukan";
 
   return (
-    <header className="flex justify-center fixed top-0 left-0 w-full z-50 md:relative items-center gap-4 bg-white p-4 md:flex-row">
-      <div className="text-center md:text-start flex items-center">
-        <h1 className="text-lg md:text-2xl font-bold text-zinc-600 flex items-center">
+    <header className="sticky top-0 z-40 flex w-full items-center justify-between border-b border-slate-200/80 bg-white/95 px-4 py-3 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/95 sm:px-6 md:px-8">
+      <div className="flex items-center gap-3">
+        <h1 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100">
           {pageTitle}
         </h1>
       </div>
-      <div className="hidden md:block w-full flex-1" />
-      <div className="hidden md:block">
+      <div className="flex items-center gap-3">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
-              className="h-auto p-0 flex items-center gap-4"
+              className="h-auto p-1.5 flex items-center gap-3 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
             >
               <Image
                 src={"/images/avatar-placeholder.png"}
                 alt="profile"
-                width={40}
-                height={40}
-                className="rounded-full object-cover"
+                width={36}
+                height={36}
+                className="rounded-full object-cover border border-slate-200 dark:border-slate-700"
               />
-              <div className="hidden text-left font-poppins text-slate-800 md:block">
-                <h5 className="text-sm font-semibold">Rozan Nouval</h5>
+              <div className="hidden text-left font-poppins text-slate-800 dark:text-slate-200 md:block">
+                <h5 className="text-sm font-semibold leading-tight">
+                  Rozan Nouval
+                </h5>
                 <p className="text-xs text-muted-foreground">
                   rozannouval@gmail.com
                 </p>
               </div>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-56">
-            <DropdownMenuLabel>My Account</DropdownMenuLabel>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuLabel>Akun Saya</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Profile</DropdownMenuItem>
-            <DropdownMenuItem>Settings</DropdownMenuItem>
+            <DropdownMenuItem>Profil</DropdownMenuItem>
+            <DropdownMenuItem>Pengaturan</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Logout</DropdownMenuItem>
+            <DropdownMenuItem className="text-destructive focus:text-destructive">
+              Keluar
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

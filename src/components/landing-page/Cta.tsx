@@ -15,9 +15,9 @@ export const CTA = () => {
               Gabung dengan pengguna Monetira lainnya dan wujudkan tujuan
               finansialmu dengan lebih mudah.
             </p>
-            <div>
-              <Link href="/register">
-                <Button className="inline-flex items-center justify-center rounded-full bg-white !px-5 py-6 sm:!px-7 sm:py-7 text-md lg:text-lg font-bold text-primary shadow-lg transition-transform hover:bg-white/90 cursor-pointer">
+            <div className="pt-2">
+              <Link href="/login">
+                <Button className="h-12 px-7 sm:px-8 text-base font-bold rounded-full bg-white text-primary shadow-lg hover:bg-white/90 cursor-pointer transition-all hover:scale-105">
                   Mulai Gratis Sekarang
                 </Button>
               </Link>

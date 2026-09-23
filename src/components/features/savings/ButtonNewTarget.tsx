@@ -19,8 +19,9 @@ const ButtonNewTarget = () => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="flex gap-2 items-center px-4! py-4 lg:px-6! lg:py-6 rounded-full lg:text-lg bg-gradient-to-br from-primary to-secondary shadow-lg shadow-primary-light-active hover:opacity-80 cursor-pointer transition-all">
-          <PlusIcon className="size-5 lg:size-6 -ml-1" /> Buat Target Baru
+        <Button className="h-10 sm:h-11 px-4 sm:px-5 rounded-xl text-sm sm:text-base font-semibold bg-primary hover:bg-primary/90 text-white shadow-sm cursor-pointer transition-all flex items-center gap-2 shrink-0">
+          <PlusIcon className="size-4 sm:size-5" />
+          <span>Buat Target Baru</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">

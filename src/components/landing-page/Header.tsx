@@ -45,11 +45,8 @@ export const Header = () => {
         </nav>
 
         <div className="hidden items-center gap-4 md:flex">
-          <Button variant="ghost" asChild>
+          <Button asChild className="rounded-full px-5 cursor-pointer">
             <Link href="/login">Masuk</Link>
-          </Button>
-          <Button asChild>
-            <Link href="/register">Daftar Gratis</Link>
           </Button>
         </div>
 
@@ -90,13 +87,8 @@ export const Header = () => {
               </nav>
               <div className="mt-auto flex flex-col gap-4">
                 <DrawerClose asChild>
-                  <Button variant="outline" asChild>
+                  <Button asChild className="w-full">
                     <Link href="/login">Masuk</Link>
-                  </Button>
-                </DrawerClose>
-                <DrawerClose asChild>
-                  <Button asChild>
-                    <Link href="/register">Daftar Gratis</Link>
                   </Button>
                 </DrawerClose>
               </div>

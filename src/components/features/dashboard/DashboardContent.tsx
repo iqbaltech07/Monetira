@@ -101,9 +101,11 @@ export function DashboardContent({
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-8">
         <div className="min-w-0 lg:col-span-7">
-          <Card className="h-full shadow-xl shadow-slate-300/40 border-0">
+          <Card className="h-full border border-slate-200/80 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <CardHeader>
-              <CardTitle>Grafik Pemasukan dan Pengeluaran</CardTitle>
+              <CardTitle className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100">
+                Grafik Pemasukan dan Pengeluaran
+              </CardTitle>
               <CardDescription>Ringkasan 6 bulan terakhir.</CardDescription>
             </CardHeader>
             <CardContent>

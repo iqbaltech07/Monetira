@@ -57,19 +57,19 @@ export default async function TransactionPage() {
           ))}
         </div>
 
-        <div className="my-1 flex flex-col-reverse md:flex-row w-full gap-4">
-          <div className="flex items-center w-1/3">
+        <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4">
+          <SearchFilterTransaction className="flex-1" />
+          <div className="shrink-0">
             <ButtonNewTransaction categories={categories} />
           </div>
-          <SearchFilterTransaction />
         </div>
 
-        <section className="rounded-lg bg-white py-4 px-4 md:px-6 shadow-xl shadow-slate-300/40 dark:bg-slate-900">
-          <h4 className="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-100">
+        <section className="rounded-xl border border-slate-200/80 bg-white py-5 px-4 md:px-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <h4 className="mb-4 text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100">
             Riwayat Transaksi
           </h4>
 
-          <div className="flex w-full flex-col gap-4">
+          <div className="flex w-full flex-col gap-3">
             {transactions.map((tx) => (
               <TransactionRowHistory key={tx.id} item={tx} />
             ))}

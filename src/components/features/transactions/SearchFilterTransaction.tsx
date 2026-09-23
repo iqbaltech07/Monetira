@@ -9,27 +9,40 @@ import {
   SelectValue,
 } from "~/components/ui/select";
 
-const SearchFilterTransaction = () => {
+interface SearchFilterTransactionProps {
+  className?: string;
+}
+
+const SearchFilterTransaction = ({
+  className,
+}: SearchFilterTransactionProps) => {
   return (
-    <div className="flex w-full gap-4 bg-white p-4 rounded-lg shadow-lg shadow-slate-300/40">
-      <div className="relative w-3/4">
-        <span className="absolute left-3 top-1/2 -translate-y-1/2">
-          <FaMagnifyingGlass size={16} className="text-gray-500" />
+    <div
+      className={`flex flex-col sm:flex-row w-full gap-3 bg-white p-2 sm:p-2.5 rounded-xl border border-slate-200/80 shadow-sm dark:bg-slate-900 dark:border-slate-800 ${
+        className || ""
+      }`}
+    >
+      <div className="relative flex-1">
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+          <FaMagnifyingGlass size={14} />
         </span>
-        <Input placeholder="Search..." className="pl-9 font-medium" />
+        <Input
+          placeholder="Cari transaksi..."
+          className="pl-9 h-10 text-sm bg-slate-50/50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800"
+        />
       </div>
-      <div className="w-1/4 flex relative">
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 z-50">
-          <Filter size={16} className="text-gray-500" />
+      <div className="w-full sm:w-48 shrink-0 relative">
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 z-10">
+          <Filter size={14} />
         </span>
-        <Select>
-          <SelectTrigger className="w-full pl-10">
-            <SelectValue placeholder="Semua" />
+        <Select defaultValue="all">
+          <SelectTrigger className="w-full pl-9 h-10 text-sm bg-slate-50/50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800">
+            <SelectValue placeholder="Semua Kategori" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="light">Semua</SelectItem>
-            <SelectItem value="dark">Gaji</SelectItem>
-            <SelectItem value="system">Freelance</SelectItem>
+            <SelectItem value="all">Semua Tipe</SelectItem>
+            <SelectItem value="Income">Pemasukan</SelectItem>
+            <SelectItem value="Expense">Pengeluaran</SelectItem>
           </SelectContent>
         </Select>
       </div>

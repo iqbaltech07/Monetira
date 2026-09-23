@@ -18,15 +18,15 @@ export const WhyMonetira = () => {
           {REASONS.map((reason) => (
             <div
               key={reason.title}
-              className="rounded-2xl bg-white dark:bg-gray-800 p-8 shadow-sm hover:shadow-lg transition-transform hover:-translate-y-1"
+              className="rounded-2xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-gray-800 p-6 shadow-sm hover:shadow-md transition-all hover:-translate-y-1"
             >
-              <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
-                <reason.icon className="h-8 w-8 text-primary" />
+              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+                <reason.icon className="h-6 w-6 text-primary" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white">
                 {reason.title}
               </h3>
-              <p className="mt-3 text-gray-600 dark:text-gray-400">
+              <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
                 {reason.description}
               </p>
             </div>

@@ -102,14 +102,14 @@ const TransactionRowHistory = ({ item }: { item: Transaction }) => {
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
             {/* Category Badge */}
             <span
-              className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide sm:text-xs ${badgeColor}`}
+              className={`inline-flex shrink-0 items-center rounded-full px-2.5 py-0.5 text-xs font-medium tracking-wide ${badgeColor}`}
             >
               {item.category?.name || "Uncategorized"}
             </span>
 
             {/* Date */}
-            <span className="flex items-center gap-1 truncate text-[10px] text-slate-500 dark:text-slate-400 sm:text-xs">
-              <Calendar aria-hidden className="h-3 w-3 shrink-0" />
+            <span className="flex items-center gap-1 truncate text-xs text-slate-500 dark:text-slate-400">
+              <Calendar aria-hidden className="h-3.5 w-3.5 shrink-0" />
               <span>{formatDateTimeID(item.date)}</span>
             </span>
           </div>
@@ -119,7 +119,7 @@ const TransactionRowHistory = ({ item }: { item: Transaction }) => {
       {/* RIGHT SECTION: Price */}
       <div className="text-right shrink-0 pl-1">
         <p
-          className={`text-sm font-bold tabular-nums sm:text-base ${className}`}
+          className={`text-sm sm:text-base font-bold tabular-nums ${className}`}
         >
           {text}
         </p>
