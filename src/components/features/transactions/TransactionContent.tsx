@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { BiMoney } from "react-icons/bi";
 import { FaArrowTrendDown, FaArrowTrendUp } from "react-icons/fa6";
+import { ReceiptText } from "lucide-react";
 import ButtonNewTransaction from "~/components/features/transactions/ButtonNewTransaction";
 import SearchFilterTransaction from "~/components/features/transactions/SearchFilterTransaction";
 import { TransactionForm } from "~/components/features/transactions/TransactionForm";
@@ -137,7 +138,11 @@ export function TransactionContent() {
 
         {filteredTransactions.length === 0 ? (
           <div className="rounded-xl border border-dashed border-slate-300 dark:border-slate-800 p-8 text-center">
-            <p className="text-3xl mb-2">🧾</p>
+            <div className="flex justify-center mb-3">
+              <div className="p-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
+                <ReceiptText className="h-6 w-6" />
+              </div>
+            </div>
             <h3 className="font-semibold text-slate-800 dark:text-slate-200 text-sm">
               Tidak ada transaksi yang cocok
             </h3>

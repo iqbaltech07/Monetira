@@ -57,7 +57,7 @@ export const Hero = () => {
             {/* CTA Buttons */}
             <div className="gsap-fade-up flex flex-col w-full sm:w-auto sm:flex-row items-center gap-3 pt-2">
               <Link href="/login" className="w-full sm:w-auto">
-                <Button className="w-full sm:w-auto h-12 px-8 text-base font-semibold cursor-pointer rounded-full shadow-lg shadow-blue-500/25 bg-blue-600 hover:bg-blue-700 text-white transition-all hover:scale-105">
+                <Button className="w-full sm:w-auto h-12 px-8 text-base font-semibold cursor-pointer rounded-xl shadow-lg shadow-blue-500/25 bg-blue-600 hover:bg-blue-700 text-white transition-all hover:scale-105">
                   Mulai Sekarang
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>

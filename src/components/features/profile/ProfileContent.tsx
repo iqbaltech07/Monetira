@@ -123,9 +123,12 @@ export function ProfileContent() {
                   {user.email} • {user.phone || "Nomor telepon belum diatur"}
                 </p>
               </div>
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200/60 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800">
-                ⭐ Member Monetira Pro
-              </span>
+              <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 dark:text-blue-400">
+                <Shield className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                <span className="border-b border-blue-400/40 pb-0.5">
+                  Member Terverifikasi
+                </span>
+              </div>
             </div>
 
             {/* Quick Metrics */}
@@ -414,9 +417,12 @@ export function ProfileContent() {
                   </p>
                 </div>
               </div>
-              <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
-                Aktif & Terlindungi
-              </span>
+              <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                <span className="h-2 w-2 rounded-xs bg-emerald-500" />
+                <span className="border-b border-emerald-500/40 pb-0.5">
+                  Aktif & Terlindungi
+                </span>
+              </div>
             </div>
           </div>
 

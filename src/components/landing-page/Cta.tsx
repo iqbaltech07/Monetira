@@ -28,7 +28,7 @@ export const CTA = () => {
             </p>
             <div className="gsap-fade-up pt-2">
               <Link href="/login">
-                <Button className="h-12 px-7 sm:px-8 text-base font-bold rounded-full bg-white text-blue-600 shadow-lg hover:bg-white/95 cursor-pointer transition-all hover:scale-105">
+                <Button className="h-12 px-7 sm:px-8 text-base font-bold rounded-xl bg-white text-blue-600 shadow-lg hover:bg-white/95 cursor-pointer transition-all hover:scale-105">
                   Mulai Gratis Sekarang
                 </Button>
               </Link>

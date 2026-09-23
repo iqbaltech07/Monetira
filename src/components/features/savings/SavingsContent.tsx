@@ -149,7 +149,11 @@ export function SavingsContent() {
       {/* Savings Cards Grid */}
       {filteredSavings.length === 0 ? (
         <div className="gsap-fade-up rounded-2xl border border-dashed border-slate-300 dark:border-slate-800 p-8 text-center bg-white dark:bg-slate-900">
-          <p className="text-3xl mb-2">🎯</p>
+          <div className="flex justify-center mb-3">
+            <div className="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400">
+              <BiTargetLock className="h-6 w-6" />
+            </div>
+          </div>
           <h3 className="font-semibold text-slate-800 dark:text-slate-200">
             Belum ada target tabungan di kategori ini
           </h3>

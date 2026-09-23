@@ -45,7 +45,7 @@ export const Header = () => {
         </nav>
 
         <div className="hidden items-center gap-4 md:flex">
-          <Button asChild className="rounded-full px-5 cursor-pointer">
+          <Button asChild className="rounded-xl px-5 cursor-pointer">
             <Link href="/login">Masuk</Link>
           </Button>
         </div>
@@ -63,11 +63,7 @@ export const Header = () => {
                 <DrawerTitle className="flex items-center justify-between">
                   <span className="text-lg font-semibold">Menu</span>
                   <DrawerClose asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="rounded-full"
-                    >
+                    <Button variant="ghost" size="icon" className="rounded-xl">
                       <X className="h-5 w-5" />
                     </Button>
                   </DrawerClose>

@@ -106,9 +106,12 @@ export function DashboardContent({
       {/* Quick Action & Greeting Banner */}
       <div className="gsap-fade-up flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-5 sm:p-6 text-white shadow-md">
         <div>
-          <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-white/20 text-white inline-block mb-2 backdrop-blur-xs">
-            ✨ Dasbor Keuangan Terintegrasi
-          </span>
+          <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-blue-100 mb-1.5">
+            <BiSolidWallet className="h-3.5 w-3.5 text-blue-200 shrink-0" />
+            <span className="border-b border-blue-200/50 pb-0.5">
+              Dasbor Finansial
+            </span>
+          </div>
           <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight">
             Ringkasan Finansial Anda
           </h1>
@@ -123,8 +126,6 @@ export function DashboardContent({
           <ButtonNewTarget />
         </div>
       </div>
-
-      {/* Stat Cards - responsive grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         <div className="gsap-fade-up">
           <StatCard
@@ -159,8 +160,6 @@ export function DashboardContent({
           />
         </div>
       </div>
-
-      {/* Charts & Goals Grid */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-8">
         <div className="gsap-fade-up min-w-0 lg:col-span-7">
           <Card className="h-full border border-slate-200/80 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900">
@@ -184,8 +183,6 @@ export function DashboardContent({
           <SavingsGoalCard savings={savings} />
         </div>
       </div>
-
-      {/* Recent Transactions List on Dashboard */}
       <div className="gsap-fade-up rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900">
         <div className="flex items-center justify-between mb-4">
           <div>

@@ -18,7 +18,7 @@ export function TransactionItem({ tx }: { tx: DetailedTransaction }) {
   return (
     <div className="flex items-center justify-between gap-4 py-3">
       <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800">
           <Icon className="h-5 w-5 text-muted-foreground" />
         </div>
         <div>

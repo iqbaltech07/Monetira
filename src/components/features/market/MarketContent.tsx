@@ -257,13 +257,15 @@ export function MarketContent() {
                 key={tab.id}
                 type="button"
                 onClick={() => setSelectedCategory(tab.id)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
                   selectedCategory === tab.id
                     ? "bg-blue-600 text-white shadow-xs"
                     : "bg-white border border-slate-200/80 text-slate-600 hover:bg-slate-50 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-300"
                 }`}
               >
-                {tab.id === "WATCHLIST" ? "⭐ " : ""}
+                {tab.id === "WATCHLIST" && (
+                  <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                )}
                 {tab.label}
               </button>
             ))}
@@ -273,7 +275,11 @@ export function MarketContent() {
           <div className="rounded-2xl border border-slate-200/80 bg-white overflow-hidden shadow-xs dark:border-slate-800 dark:bg-slate-900">
             {filteredAssets.length === 0 ? (
               <div className="p-8 text-center text-slate-500">
-                <p className="text-2xl mb-1">🔍</p>
+                <div className="flex justify-center mb-2">
+                  <div className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400">
+                    <Search className="h-5 w-5" />
+                  </div>
+                </div>
                 <p className="text-sm font-medium">Tidak ada aset ditemukan</p>
               </div>
             ) : (

@@ -14,17 +14,14 @@ interface SavingCardProps {
 
 const StatusBadge = ({ status }: { status: SavingStatus }) => {
   const styles = {
-    Active:
-      "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
-    Completed:
-      "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
-    Cancelled:
-      "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400",
+    Active: "text-emerald-600 dark:text-emerald-400 border-emerald-500/40",
+    Completed: "text-blue-600 dark:text-blue-400 border-blue-500/40",
+    Cancelled: "text-slate-500 dark:text-slate-400 border-slate-400/40",
   };
 
   return (
     <span
-      className={`px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wider ${styles[status]}`}
+      className={`text-[11px] sm:text-xs font-semibold uppercase tracking-wider border-b pb-0.5 ${styles[status]}`}
     >
       {status === "Active"
         ? "Berjalan"

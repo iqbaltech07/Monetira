@@ -81,10 +81,10 @@ const TransactionRowHistory = ({
         ? TrendingUp
         : ArrowDown;
 
-  const badgeColor =
+  const categoryColor =
     item.type === "Income"
-      ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300"
-      : "bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300";
+      ? "text-emerald-700 dark:text-emerald-400 border-emerald-500/40"
+      : "text-slate-600 dark:text-slate-400 border-slate-300 dark:border-slate-700";
 
   return (
     <div className="group flex items-center justify-between rounded-xl border border-slate-200/80 bg-white p-3 shadow-xs transition-all hover:shadow-md dark:border-slate-800 dark:bg-slate-900 sm:px-4 sm:py-3.5 gap-2.5 sm:gap-3">
@@ -108,9 +108,9 @@ const TransactionRowHistory = ({
           </p>
 
           <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-            {/* Category Badge */}
+            {/* Category Indicator */}
             <span
-              className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.2 text-[10px] sm:text-xs font-medium tracking-wide ${badgeColor}`}
+              className={`inline-flex shrink-0 items-center text-[10px] sm:text-xs font-semibold tracking-wide border-b pb-0.5 ${categoryColor}`}
             >
               {item.category?.name || "Umum"}
             </span>
