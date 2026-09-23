@@ -14,8 +14,9 @@ import {
   CardHeader,
   CardTitle,
 } from "~/components/ui/card";
+import { useGsapReveal } from "~/lib/gsap";
 import { formatCurrency } from "~/lib/utils";
-import type { Transaction, Saving } from "~/types/database";
+import type { Saving, Transaction } from "~/types/database";
 
 interface DashboardContentProps {
   transactions: Transaction[];
@@ -28,6 +29,7 @@ export function DashboardContent({
   savings,
   userBalance,
 }: DashboardContentProps) {
+  const containerRef = useGsapReveal<HTMLDivElement>({ stagger: 0.08, y: 20 });
   const [hideBalance, setHideBalance] = useState(false);
 
   // Calculate totals for the current month
@@ -49,7 +51,6 @@ export function DashboardContent({
     .reduce((acc, curr) => acc + curr.amount, 0);
 
   // Calculate category expenses for the chart
-  // We need to group expenses by category name
   const categoryExpensesMap = new Map<string, number>();
 
   transactions
@@ -69,38 +70,46 @@ export function DashboardContent({
   );
 
   return (
-    <div className="flex flex-col gap-6 md:gap-8">
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:grid-cols-3">
-        <StatCard
-          title="Total Saldo"
-          description="Total dana Anda saat ini."
-          amount={formatCurrency(userBalance)}
-          icon={BiSolidWallet}
-          variant="primary"
-          isHidden={hideBalance}
-          onToggleHidden={() => setHideBalance(!hideBalance)}
-          showEye={true}
-        />
-        <StatCard
-          title="Pemasukan"
-          description="Pendapatan bulan ini."
-          amount={formatCurrency(income)}
-          icon={FaArrowTrendUp}
-          variant="success"
-          isHidden={hideBalance}
-        />
-        <StatCard
-          title="Pengeluaran"
-          description="Pengeluaran bulan ini."
-          amount={formatCurrency(expense)}
-          icon={FaArrowTrendDown}
-          variant="danger"
-          isHidden={hideBalance}
-        />
+    <div ref={containerRef} className="flex flex-col gap-6 md:gap-8">
+      {/* Stat Cards - responsive grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        <div className="gsap-fade-up">
+          <StatCard
+            title="Total Saldo"
+            description="Total dana Anda saat ini."
+            amount={formatCurrency(userBalance)}
+            icon={BiSolidWallet}
+            variant="primary"
+            isHidden={hideBalance}
+            onToggleHidden={() => setHideBalance(!hideBalance)}
+            showEye={true}
+          />
+        </div>
+        <div className="gsap-fade-up">
+          <StatCard
+            title="Pemasukan"
+            description="Pendapatan bulan ini."
+            amount={formatCurrency(income)}
+            icon={FaArrowTrendUp}
+            variant="success"
+            isHidden={hideBalance}
+          />
+        </div>
+        <div className="gsap-fade-up sm:col-span-2 lg:col-span-1">
+          <StatCard
+            title="Pengeluaran"
+            description="Pengeluaran bulan ini."
+            amount={formatCurrency(expense)}
+            icon={FaArrowTrendDown}
+            variant="danger"
+            isHidden={hideBalance}
+          />
+        </div>
       </div>
 
+      {/* Charts & Goals Grid */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-8">
-        <div className="min-w-0 lg:col-span-7">
+        <div className="gsap-fade-up min-w-0 lg:col-span-7">
           <Card className="h-full border border-slate-200/80 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <CardHeader>
               <CardTitle className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100">
@@ -114,11 +123,11 @@ export function DashboardContent({
           </Card>
         </div>
 
-        <div className="min-w-0 lg:col-span-5">
+        <div className="gsap-fade-up min-w-0 lg:col-span-5">
           <ExpenseCategoryCard data={categoryExpenses} />
         </div>
 
-        <div className="lg:col-span-12">
+        <div className="gsap-fade-up lg:col-span-12">
           <SavingsGoalCard savings={savings} />
         </div>
       </div>

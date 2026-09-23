@@ -5,10 +5,12 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "~/components/ui/button";
 import { Card } from "~/components/ui/card";
+import { useGsapReveal } from "~/lib/gsap";
 
 export default function LoginPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const containerRef = useGsapReveal<HTMLDivElement>({ stagger: 0.1, y: 20 });
 
   const handleGoogleLogin = () => {
     setIsLoading(true);
@@ -19,22 +21,27 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="w-full lg:grid lg:min-h-screen lg:grid-cols-2">
+    <div
+      ref={containerRef}
+      className="w-full lg:grid lg:min-h-screen lg:grid-cols-2"
+    >
       <div className="hidden bg-gradient-to-br from-primary/90 via-primary/80 to-primary/75 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900 lg:block">
         <div className="flex flex-col justify-center items-center h-full p-12 text-center -mt-6">
-          <Image
-            src="/images/ilustrations/finance-leaders.svg"
-            alt="finance-leaders"
-            width={400}
-            height={400}
-            draggable="false"
-            priority
-          />
+          <div className="gsap-scale-in">
+            <Image
+              src="/images/ilustrations/finance-leaders.svg"
+              alt="finance-leaders"
+              width={400}
+              height={400}
+              draggable="false"
+              priority
+            />
+          </div>
           <div className="max-w-lg space-y-4">
-            <h2 className="text-3xl xl:text-4xl font-extrabold text-white leading-tight">
+            <h2 className="gsap-fade-up text-3xl xl:text-4xl font-extrabold text-white leading-tight">
               Atur Keuangan, Capai Kebebasan Finansial
             </h2>
-            <p className="text-base text-white/90 leading-relaxed">
+            <p className="gsap-fade-up text-base text-white/90 leading-relaxed">
               Monetira adalah partner terbaik Anda untuk mencatat, merencanakan,
               dan mencapai tujuan finansial dengan mudah dan transparan.
             </p>
@@ -45,7 +52,7 @@ export default function LoginPage() {
       <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 min-h-screen bg-slate-50/50 dark:bg-slate-950">
         <div className="mx-auto w-full max-w-[420px] space-y-6">
           <div className="text-center space-y-3">
-            <div className="flex justify-center mb-2">
+            <div className="gsap-scale-in flex justify-center mb-2">
               <Image
                 src="/images/monetira-icon-title.svg"
                 alt="Monetira Logo"
@@ -55,16 +62,16 @@ export default function LoginPage() {
                 draggable="false"
               />
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+            <h1 className="gsap-fade-up text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
               Selamat Datang
             </h1>
-            <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
+            <p className="gsap-fade-up text-sm text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
               Masuk dengan satu klik menggunakan Google untuk mulai mengelola
               keuangan Anda.
             </p>
           </div>
 
-          <Card className="border border-slate-200/80 bg-white p-6 sm:p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900 rounded-2xl">
+          <Card className="gsap-scale-in border border-slate-200/80 bg-white p-6 sm:p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900 rounded-2xl">
             <div className="space-y-5">
               <Button
                 type="button"
