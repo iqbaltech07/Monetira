@@ -2,10 +2,11 @@
 
 import {
   ArrowRight,
+  CreditCard,
   PiggyBank,
   ShieldCheck,
-  Sparkles,
   TrendingUp,
+  Wallet,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -30,16 +31,18 @@ export const Hero = () => {
         <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-12 lg:gap-12">
           {/* LEFT: Text & Value Prop */}
           <div className="flex flex-col items-center text-center lg:items-start lg:text-left lg:col-span-6 space-y-4 sm:space-y-5">
-            {/* Eyebrow Badge */}
-            <div className="gsap-fade-up inline-flex items-center gap-2 rounded-full border border-blue-500/20 bg-blue-500/10 px-3.5 py-1.5 text-xs font-semibold text-blue-600 dark:text-blue-400 shadow-xs">
-              <Sparkles className="h-3.5 w-3.5" />
-              <span>Solusi Cerdas Kelola Finansial</span>
+            {/* Eyebrow Kicker with Underline */}
+            <div className="gsap-fade-up inline-flex items-center gap-2 text-xs sm:text-sm font-semibold tracking-wide text-blue-600 dark:text-blue-400">
+              <Wallet className="h-4 w-4 shrink-0 text-blue-600 dark:text-blue-400" />
+              <span className="border-b-2 border-blue-600 pb-0.5 dark:border-blue-400">
+                Solusi Cerdas Kelola Finansial
+              </span>
             </div>
 
             {/* Headline */}
             <h1 className="gsap-fade-up text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-[1.15]">
               Atur Keuangan, Raih{" "}
-              <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+              <span className="text-blue-600 dark:text-blue-500">
                 Kebebasan Finansial
               </span>
             </h1>
@@ -68,7 +71,7 @@ export const Hero = () => {
               </span>
               <span className="text-slate-300 dark:text-slate-700">•</span>
               <span className="flex items-center gap-1.5 font-medium">
-                <Sparkles className="h-4 w-4 text-amber-500" /> Tanpa Kartu
+                <CreditCard className="h-4 w-4 text-blue-500" /> Tanpa Kartu
                 Kredit
               </span>
             </div>
