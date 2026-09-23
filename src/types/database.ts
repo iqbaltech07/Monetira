@@ -77,3 +77,25 @@ export interface AiInsight {
   content: string;
   created_at: Date;
 }
+
+export interface MarketAsset {
+  symbol: string;
+  name: string;
+  category: "Crypto" | "Stock" | "Commodity" | "Forex";
+  price: number;
+  change24h: number;
+  high24h: number;
+  low24h: number;
+  volume: string;
+  sparkline: number[];
+  unit?: string;
+  icon?: string;
+}
+
+export interface UserPreferences {
+  currency: "IDR" | "USD" | "EUR" | "SGD";
+  monthlyBudget: number;
+  emailNotifications: boolean;
+  budgetAlerts: boolean;
+  theme: "system" | "light" | "dark";
+}

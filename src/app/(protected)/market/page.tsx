@@ -1,5 +1,5 @@
-const Market = () => {
-  return <div>Market</div>;
-};
+import { MarketContent } from "~/components/features/market/MarketContent";
 
-export default Market;
+export default function MarketPage() {
+  return <MarketContent />;
+}

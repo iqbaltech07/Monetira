@@ -4,7 +4,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-
 import { Button } from "~/components/ui/button";
 import {
   Form,
@@ -15,31 +14,72 @@ import {
   FormMessage,
 } from "~/components/ui/form";
 import { Input } from "~/components/ui/input";
+import { useMonetira } from "~/lib/store/monetira-context";
+import type { Saving } from "~/types/database";
 
 const formSchema = z.object({
   name: z.string().min(1, "Nama target harus diisi"),
-  target_amount: z.coerce.number().min(1, "Target harus lebih dari 0"),
-  deadline: z.date().optional(),
+  target_amount: z.coerce.number().min(1, "Target nominal harus lebih dari 0"),
+  deadline: z.string().optional(),
   emoji: z.string().optional(),
 });
 
 interface SavingFormProps {
+  initialData?: Saving | null;
   onSuccess?: () => void;
 }
 
-export function SavingForm({ onSuccess }: SavingFormProps) {
+const EMOJI_OPTIONS = [
+  "💰",
+  "🛡️",
+  "✈️",
+  "💻",
+  "🏠",
+  "🚗",
+  "💍",
+  "🎓",
+  "📱",
+  "🏖️",
+  "📈",
+  "🎁",
+];
+
+export function SavingForm({ initialData, onSuccess }: SavingFormProps) {
+  const { addSaving, updateSaving } = useMonetira();
+
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "",
-      target_amount: 0,
-      deadline: undefined,
-      emoji: "💰",
+      name: initialData?.name || "",
+      target_amount: initialData?.target_amount || 0,
+      deadline: initialData?.deadline
+        ? format(new Date(initialData.deadline), "yyyy-MM-dd")
+        : "",
+      emoji: initialData?.emoji || "💰",
     },
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
+    const deadlineDate = values.deadline
+      ? new Date(values.deadline)
+      : undefined;
+
+    if (initialData) {
+      updateSaving(initialData.id, {
+        name: values.name,
+        target_amount: values.target_amount,
+        deadline: deadlineDate,
+        emoji: values.emoji || "💰",
+      });
+    } else {
+      addSaving({
+        name: values.name,
+        target_amount: values.target_amount,
+        deadline: deadlineDate,
+        emoji: values.emoji || "💰",
+      });
+    }
+
     if (onSuccess) {
       onSuccess();
     }
@@ -48,33 +88,44 @@ export function SavingForm({ onSuccess }: SavingFormProps) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        {/* Nama Target */}
         <FormField
           control={form.control}
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Nama Target</FormLabel>
+              <FormLabel>Nama Target Tabungan</FormLabel>
               <FormControl>
-                <Input placeholder="Contoh: Liburan ke Bali" {...field} />
+                <Input
+                  placeholder="Contoh: Dana Darurat, Liburan Jepang"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
 
+        {/* Target Nominal */}
         <FormField
           control={form.control}
           name="target_amount"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Target Dana (Rp)</FormLabel>
+              <FormLabel>Target Nominal (Rp)</FormLabel>
               <FormControl>
                 <Input
                   type="number"
-                  placeholder="0"
-                  {...field}
-                  value={field.value as number}
-                  onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                  placeholder="Contoh: 10000000"
+                  name={field.name}
+                  ref={field.ref}
+                  onBlur={field.onBlur}
+                  value={
+                    Number.isNaN(field.value) || !field.value
+                      ? ""
+                      : (field.value as number)
+                  }
+                  onChange={(e) => field.onChange(Number(e.target.value) || 0)}
                 />
               </FormControl>
               <FormMessage />
@@ -82,17 +133,18 @@ export function SavingForm({ onSuccess }: SavingFormProps) {
           )}
         />
 
+        {/* Target Tanggal */}
         <FormField
           control={form.control}
           name="deadline"
           render={({ field }) => (
             <FormItem className="flex flex-col">
-              <FormLabel>Target Tanggal (Opsional)</FormLabel>
+              <FormLabel>Batas Waktu / Deadline (Opsional)</FormLabel>
               <FormControl>
                 <Input
                   type="date"
-                  value={field.value ? format(field.value, "yyyy-MM-dd") : ""}
-                  onChange={(e) => field.onChange(new Date(e.target.value))}
+                  value={field.value || ""}
+                  onChange={(e) => field.onChange(e.target.value)}
                 />
               </FormControl>
               <FormMessage />
@@ -100,22 +152,39 @@ export function SavingForm({ onSuccess }: SavingFormProps) {
           )}
         />
 
+        {/* Emoji Selector */}
         <FormField
           control={form.control}
           name="emoji"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Icon (Emoji)</FormLabel>
-              <FormControl>
-                <Input placeholder="💰" {...field} />
-              </FormControl>
+              <FormLabel>Pilih Ikon / Emoji</FormLabel>
+              <div className="flex flex-wrap gap-2 pt-1">
+                {EMOJI_OPTIONS.map((emoji) => (
+                  <button
+                    key={emoji}
+                    type="button"
+                    onClick={() => field.onChange(emoji)}
+                    className={`h-9 w-9 rounded-xl text-lg flex items-center justify-center border transition-all ${
+                      field.value === emoji
+                        ? "border-blue-600 bg-blue-50 scale-110 shadow-xs dark:bg-blue-950/40"
+                        : "border-slate-200 hover:bg-slate-50 dark:border-slate-800"
+                    }`}
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
               <FormMessage />
             </FormItem>
           )}
         />
 
-        <Button type="submit" className="w-full">
-          Simpan Target
+        <Button
+          type="submit"
+          className="w-full h-11 text-base font-semibold bg-blue-600 hover:bg-blue-700 text-white"
+        >
+          {initialData ? "Simpan Perubahan Target" : "Buat Target Tabungan"}
         </Button>
       </form>
     </Form>
