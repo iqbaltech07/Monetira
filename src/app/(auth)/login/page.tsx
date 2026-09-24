@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Image from "next/image";
 import { useState } from "react";
@@ -14,11 +14,16 @@ export default function LoginPage() {
   const handleGoogleLogin = async () => {
     setIsLoading(true);
     try {
+      const params =
+        typeof window !== "undefined"
+          ? new URLSearchParams(window.location.search)
+          : null;
+      const callbackUrl = params?.get("callbackUrl") || "/dashboard";
+
       // Real Google OAuth — initiates the full OAuth flow.
-      // No setTimeout, no fake redirect.
       // Auth.js handles the callback at /api/auth/callback/google.
       await signIn("google", {
-        callbackUrl: "/dashboard",
+        callbackUrl,
         redirect: true,
       });
     } catch {

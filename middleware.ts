@@ -1,15 +1,12 @@
-﻿/**
+/**
  * middleware.ts
  *
- * Next.js middleware for server-side route protection.
+ * Next.js Edge Middleware for server-side route protection.
  *
- * Protected routes require an authenticated session.
- * Unauthenticated users are redirected to /login.
+ * Runs at the Edge — NO database calls, NO Prisma dependencies.
+ * Session is verified statelessly via Auth.js JWT session token (httpOnly cookie).
  *
- * This runs at the edge — no database calls in middleware.
- * Session is verified via Auth.js session token (httpOnly cookie).
- *
- * Public routes (no auth required):
+ * Public routes:
  *   /            — landing page
  *   /login       — sign-in page
  *   /register    — sign-up page
@@ -20,9 +17,12 @@
  *   /images/*    — static assets
  */
 
-import { auth } from "~/auth";
+import NextAuth from "next-auth";
+import { authConfig } from "~/auth.config";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+
+const { auth } = NextAuth(authConfig);
 
 const PUBLIC_PATHS = ["/", "/login", "/register", "/forgot-password"];
 
@@ -43,9 +43,14 @@ export default auth(
   (req: NextRequest & { auth: { user?: unknown } | null }) => {
     const { pathname } = req.nextUrl;
 
+    // If authenticated user visits login or register, redirect to dashboard
+    if (req.auth && (pathname === "/login" || pathname === "/register")) {
+      return NextResponse.redirect(new URL("/dashboard", req.nextUrl.origin));
+    }
+
     if (isPublic(pathname)) return NextResponse.next();
 
-    // No session — redirect to login
+    // No session — redirect to login with callbackUrl
     if (!req.auth) {
       const loginUrl = new URL("/login", req.nextUrl.origin);
       loginUrl.searchParams.set("callbackUrl", pathname);
