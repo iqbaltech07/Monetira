@@ -1,23 +1,30 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { signIn } from "next-auth/react";
 import { Button } from "~/components/ui/button";
 import { Card } from "~/components/ui/card";
 import { useGsapReveal } from "~/lib/gsap";
 
 export default function LoginPage() {
-  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const containerRef = useGsapReveal<HTMLDivElement>({ stagger: 0.1, y: 20 });
 
-  const handleGoogleLogin = () => {
+  const handleGoogleLogin = async () => {
     setIsLoading(true);
-    // Simulate / trigger Google OAuth
-    setTimeout(() => {
-      router.push("/dashboard");
-    }, 600);
+    try {
+      // Real Google OAuth — initiates the full OAuth flow.
+      // No setTimeout, no fake redirect.
+      // Auth.js handles the callback at /api/auth/callback/google.
+      await signIn("google", {
+        callbackUrl: "/dashboard",
+        redirect: true,
+      });
+    } catch {
+      // signIn will redirect on success; errors stay on this page.
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -104,7 +111,9 @@ export default function LoginPage() {
                     d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.34 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
                   />
                 </svg>
-                {isLoading ? "Menghubungkan..." : "Lanjutkan dengan Google"}
+                {isLoading
+                  ? "Menghubungkan ke Google..."
+                  : "Lanjutkan dengan Google"}
               </Button>
 
               <div className="pt-2 text-center text-xs text-slate-400 dark:text-slate-500 leading-relaxed">

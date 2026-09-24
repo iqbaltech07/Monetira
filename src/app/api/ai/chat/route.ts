@@ -1,36 +1,31 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import type { FinancialContext } from "~/lib/ai/financial-context";
 import {
   generateFinancialResponse,
   type ChatResponse,
 } from "~/lib/ai/provider";
-import { checkAiChatAllowance } from "~/lib/subscription/ai-usage";
+import { checkAiChatAllowance as checkLocalAllowance } from "~/lib/subscription/ai-usage";
+import {
+  checkAiChatAllowance as checkDbAllowance,
+  incrementChatUsage,
+} from "~/lib/subscription/ai-usage-db";
 import type { Subscription } from "~/types/database";
+import { auth } from "~/auth";
 
 /**
  * POST /api/ai/chat
  *
  * Financial Chat API Route — READ-ONLY.
  *
- * ARCHITECTURE:
- *   Client sends:
- *     - message: user question (untrusted)
- *     - context: FinancialContext built by application (trusted structure,
- *                but validated server-side before use)
- *     - subscription: client-reported subscription state
- *     - currentWeeklyUsage: client-reported weekly counter
+ * QUOTA STRATEGY (dual-mode during migration):
+ *   - If Auth.js session exists: use DB-backed quota (server source of truth)
+ *   - If no session: use client-reported quota (localStorage, backward compat)
  *
- *   Server:
- *     1. Validates message (empty, too long, injection guard)
- *     2. Validates context shape (not user-computed raw numbers)
- *     3. Validates subscription & usage allowance
- *     4. Passes to AI provider
- *     5. Returns answer
+ * Once all users are authenticated, the client-reported fallback will be removed.
  *
- * NOTE ON SERVER SOURCE OF TRUTH:
- * Once server-side session authentication (OAuth) and PostgreSQL are live,
- * the server will read user_id from the session token and fetch the subscription
- * directly from the database, eliminating any client-reported usage parameters.
+ * SECURITY:
+ * - User ID ONLY from Auth.js session (never from request body)
+ * - DB quota cannot be spoofed by client
  */
 
 interface ChatRequestBody {
@@ -40,7 +35,6 @@ interface ChatRequestBody {
   currentWeeklyUsage?: number;
 }
 
-// Minimal structural validation — not business logic validation
 function isValidContext(ctx: unknown): ctx is FinancialContext {
   if (!ctx || typeof ctx !== "object") return false;
   const c = ctx as Record<string, unknown>;
@@ -59,9 +53,7 @@ function isValidContext(ctx: unknown): ctx is FinancialContext {
   );
 }
 
-// Basic prompt injection guard — strip known jailbreak patterns
 function sanitizeMessage(msg: string): string {
-  // Remove common injection patterns
   return msg
     .replace(
       /ignore (all )?(previous|prior|above) (instructions?|rules?|prompts?)/gi,
@@ -89,7 +81,6 @@ export async function POST(
 
   const { message, context } = body;
 
-  // ── Input Validation ──────────────────────────────────────────────────────
   if (typeof message !== "string" || message.trim().length === 0) {
     return NextResponse.json(
       { error: "Pertanyaan tidak boleh kosong." },
@@ -111,26 +102,49 @@ export async function POST(
     );
   }
 
-  // ── Subscription & Entitlement Check (Server Guard) ───────────────────────
-  if (body.subscription) {
-    const allowance = checkAiChatAllowance(
-      body.subscription,
-      body.currentWeeklyUsage ?? 0,
-    );
+  // ── QUOTA CHECK: DB-backed (authenticated) or client-reported (fallback) ──
+
+  const session = await auth();
+
+  if (session?.user?.id) {
+    // AUTHENTICATED: Use server-side DB quota (cannot be spoofed)
+    const allowance = await checkDbAllowance(session.user.id);
     if (!allowance.allowed) {
       return NextResponse.json(
         { error: allowance.reason || "Batas penggunaan AI mingguan tercapai." },
         { status: 429 },
       );
     }
+  } else {
+    // UNAUTHENTICATED: Fall back to client-reported quota
+    if (body.subscription) {
+      const allowance = checkLocalAllowance(
+        body.subscription,
+        body.currentWeeklyUsage ?? 0,
+      );
+      if (!allowance.allowed) {
+        return NextResponse.json(
+          {
+            error: allowance.reason || "Batas penggunaan AI mingguan tercapai.",
+          },
+          { status: 429 },
+        );
+      }
+    }
   }
 
-  // ── Sanitize user message (prompt injection guard) ────────────────────────
   const sanitizedMessage = sanitizeMessage(message.trim());
 
-  // ── Generate Response ─────────────────────────────────────────────────────
   try {
     const response = await generateFinancialResponse(sanitizedMessage, context);
+
+    // Increment DB counter AFTER successful response (authenticated only)
+    if (session?.user?.id) {
+      await incrementChatUsage(session.user.id).catch(() => {
+        // Non-fatal: quota increment failure should not block the response
+      });
+    }
+
     return NextResponse.json(response);
   } catch (err) {
     console.error(
@@ -138,9 +152,7 @@ export async function POST(
       err instanceof Error ? err.message : "unknown",
     );
     return NextResponse.json(
-      {
-        error: "AI sedang tidak tersedia. Coba lagi beberapa saat.",
-      },
+      { error: "AI sedang tidak tersedia. Coba lagi beberapa saat." },
       { status: 503 },
     );
   }

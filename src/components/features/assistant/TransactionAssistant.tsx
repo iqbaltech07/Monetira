@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   ArrowLeftRight,
@@ -13,11 +13,15 @@ import {
 } from "lucide-react";
 import { useRef, useState } from "react";
 import { useMonetira } from "~/lib/store/monetira-context";
-import type { ParseResult, TransactionIntent } from "~/lib/ai/types";
+import type {
+  ParseResult,
+  TransactionIntent,
+  TransactionItem,
+} from "~/lib/ai/types";
 import { formatCurrency } from "~/lib/utils";
 import type { Account, Category } from "~/types/database";
 
-// ─── Types ───────────────────────────────────────────────────────────────────
+// --- Types ---
 
 type AssistantState =
   | { stage: "idle" }
@@ -28,18 +32,13 @@ type AssistantState =
       intent: TransactionIntent;
       resolvedSourceId?: string;
       resolvedDestId?: string;
-      categoryId?: string;
+      categoryIds: (string | undefined)[];
     }
   | { stage: "success"; message: string }
   | { stage: "error"; message: string };
 
-// ─── Account Resolution ───────────────────────────────────────────────────────
+// --- Account Resolution ---
 
-/**
- * Resolve an account name hint to an actual Account object.
- * Fuzzy match: case-insensitive substring.
- * Returns null when no match found — we NEVER create accounts here.
- */
 function resolveAccount(
   nameHint: string | undefined,
   accounts: Account[],
@@ -48,10 +47,8 @@ function resolveAccount(
   if (!nameHint) return null;
   const query = nameHint.toLowerCase().trim();
   const filtered = type ? accounts.filter((a) => a.type === type) : accounts;
-  // Exact match first
   const exact = filtered.find((a) => a.name.toLowerCase() === query);
   if (exact) return exact;
-  // Substring match
   const sub = filtered.find(
     (a) =>
       a.name.toLowerCase().includes(query) ||
@@ -60,10 +57,6 @@ function resolveAccount(
   return sub ?? null;
 }
 
-/**
- * Resolve a category name hint to a category_id.
- * Fuzzy substring match.
- */
 function resolveCategory(
   hint: string | undefined,
   categories: Category[],
@@ -79,7 +72,7 @@ function resolveCategory(
   return match?.id;
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// --- Helpers ---
 
 function typeLabel(type: TransactionIntent["type"]) {
   return type === "Income"
@@ -112,7 +105,7 @@ const typeAmountColor: Record<TransactionIntent["type"], string> = {
   Transfer: "text-blue-700 dark:text-blue-400",
 };
 
-// ─── Main Component ───────────────────────────────────────────────────────────
+// --- Main Component ---
 
 interface TransactionAssistantProps {
   onClose?: () => void;
@@ -133,7 +126,7 @@ export function TransactionAssistant({ onClose }: TransactionAssistantProps) {
   const [state, setState] = useState<AssistantState>({ stage: "idle" });
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // ─── PARSE ─────────────────────────────────────────────────────────────────
+  // --- PARSE ---
 
   async function handleParse(text: string) {
     const trimmed = text.trim();
@@ -167,7 +160,6 @@ export function TransactionAssistant({ onClose }: TransactionAssistantProps) {
 
     const { intent } = result;
 
-    // Low confidence or clarification needed
     if (intent.confidence < 0.5 || intent.clarificationNeeded) {
       setState({
         stage: "clarify",
@@ -176,12 +168,11 @@ export function TransactionAssistant({ onClose }: TransactionAssistantProps) {
       return;
     }
 
-    // Resolve accounts
+    // Resolve accounts for Transfer
     let resolvedSourceId: string | undefined;
     let resolvedDestId: string | undefined;
 
     if (intent.type === "Transfer") {
-      // Source: default to main account
       const src = intent.sourceAccountName
         ? resolveAccount(intent.sourceAccountName, accounts)
         : mainAccount;
@@ -194,7 +185,6 @@ export function TransactionAssistant({ onClose }: TransactionAssistantProps) {
       }
       resolvedSourceId = src.id;
 
-      // Destination: must be resolved from savings
       const dest = resolveAccount(
         intent.destinationAccountName,
         accounts,
@@ -214,11 +204,9 @@ export function TransactionAssistant({ onClose }: TransactionAssistantProps) {
       resolvedDestId = dest.id;
     }
 
-    // Resolve category
-    const categoryId = resolveCategory(
-      intent.categoryHint,
-      categories,
-      intent.type,
+    // Resolve category per item
+    const categoryIds = intent.items.map((item) =>
+      resolveCategory(item.categoryHint, categories, intent.type),
     );
 
     setState({
@@ -226,49 +214,24 @@ export function TransactionAssistant({ onClose }: TransactionAssistantProps) {
       intent,
       resolvedSourceId,
       resolvedDestId,
-      categoryId,
+      categoryIds,
     });
   }
 
-  // ─── CONFIRM ───────────────────────────────────────────────────────────────
+  // --- CONFIRM (atomic: validate all items first, then execute all) ---
 
   function handleConfirm() {
     if (state.stage !== "preview") return;
-    const { intent, resolvedSourceId, resolvedDestId, categoryId } = state;
+    const { intent, resolvedSourceId, resolvedDestId, categoryIds } = state;
 
-    let result:
-      | ReturnType<typeof createIncome>
-      | ReturnType<typeof createExpense>
-      | ReturnType<typeof createTransfer>;
-
-    if (intent.type === "Income") {
-      const destAccount = mainAccount;
-      result = createIncome({
-        accountId: destAccount?.id ?? null,
-        amount: intent.amount,
-        categoryId: categoryId ?? null,
-        note: intent.description ?? null,
-        date: intent.date ? new Date(intent.date) : new Date(),
-      });
-    } else if (intent.type === "Expense") {
-      const srcAccount = mainAccount;
-      result = createExpense({
-        accountId: srcAccount?.id ?? null,
-        amount: intent.amount,
-        categoryId: categoryId ?? null,
-        note: intent.description ?? null,
-        date: intent.date ? new Date(intent.date) : new Date(),
-      });
-    } else {
-      // Transfer
+    // ATOMIC: For multi-item, validate ALL items before creating ANY
+    if (intent.type === "Transfer") {
       if (!resolvedSourceId || !resolvedDestId) {
         setState({ stage: "error", message: "Rekening tidak lengkap." });
         return;
       }
-
-      // Pre-validate balance before calling engine
       const srcBalance = getAccountBalance(resolvedSourceId);
-      if (srcBalance < intent.amount) {
+      if (srcBalance < intent.totalAmount) {
         const srcName =
           accounts.find((a) => a.id === resolvedSourceId)?.name ?? "Sumber";
         setState({
@@ -278,24 +241,78 @@ export function TransactionAssistant({ onClose }: TransactionAssistantProps) {
         return;
       }
 
-      result = createTransfer({
+      const result = createTransfer({
         sourceAccountId: resolvedSourceId,
         destinationAccountId: resolvedDestId,
-        amount: intent.amount,
-        note: intent.description ?? null,
+        amount: intent.totalAmount,
+        note: intent.items[0]?.description ?? null,
         date: intent.date ? new Date(intent.date) : new Date(),
       });
+
+      if (!result.success) {
+        setState({
+          stage: "error",
+          message: result.error ?? "Transfer gagal.",
+        });
+        return;
+      }
+    } else {
+      // Income or Expense: create N transactions (one per item)
+      // Step 1: Validate ALL items
+      for (const item of intent.items) {
+        if (!Number.isFinite(item.amount) || item.amount <= 0) {
+          setState({
+            stage: "error",
+            message: `Nominal item "${item.description}" tidak valid.`,
+          });
+          return;
+        }
+      }
+
+      // Step 2: Execute ALL items
+      for (let i = 0; i < intent.items.length; i++) {
+        const item = intent.items[i]!;
+        const catId = categoryIds[i];
+
+        let result:
+          | ReturnType<typeof createIncome>
+          | ReturnType<typeof createExpense>;
+
+        if (intent.type === "Income") {
+          result = createIncome({
+            accountId: mainAccount?.id ?? null,
+            amount: item.amount,
+            categoryId: catId ?? null,
+            note: item.description ?? null,
+            date: intent.date ? new Date(intent.date) : new Date(),
+          });
+        } else {
+          result = createExpense({
+            accountId: mainAccount?.id ?? null,
+            amount: item.amount,
+            categoryId: catId ?? null,
+            note: item.description ?? null,
+            date: intent.date ? new Date(intent.date) : new Date(),
+          });
+        }
+
+        if (!result.success) {
+          setState({
+            stage: "error",
+            message: `Item "${item.description}" gagal disimpan: ${result.error ?? "error tidak diketahui"}`,
+          });
+          return;
+        }
+      }
     }
 
-    if (!result.success) {
-      setState({ stage: "error", message: result.error ?? "Transaksi gagal." });
-      return;
-    }
+    const itemCount = intent.items.length;
+    const successMsg =
+      itemCount > 1
+        ? `${itemCount} ${typeLabel(intent.type)} total ${formatCurrency(intent.totalAmount)} berhasil dicatat.`
+        : `${typeLabel(intent.type)} ${formatCurrency(intent.totalAmount)} berhasil dicatat.`;
 
-    setState({
-      stage: "success",
-      message: `${typeLabel(intent.type)} ${formatCurrency(intent.amount)} berhasil dicatat.`,
-    });
+    setState({ stage: "success", message: successMsg });
     setInput("");
 
     setTimeout(() => {
@@ -316,7 +333,7 @@ export function TransactionAssistant({ onClose }: TransactionAssistantProps) {
     }
   };
 
-  // ─── RENDER ────────────────────────────────────────────────────────────────
+  // --- RENDER ---
 
   return (
     <div className="flex flex-col gap-4">
@@ -331,7 +348,7 @@ export function TransactionAssistant({ onClose }: TransactionAssistantProps) {
               Catat Transaksi dengan Bahasa Natural
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Ketik transaksi Anda, AI akan menginterpretasikannya
+              Ketik satu atau beberapa transaksi sekaligus
             </p>
           </div>
         </div>
@@ -354,7 +371,7 @@ export function TransactionAssistant({ onClose }: TransactionAssistantProps) {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="contoh: Beli kopi 25 ribu, Gaji masuk 5 juta..."
+          placeholder="contoh: Martabak 45rb sama teh poci 5rb..."
           disabled={
             state.stage === "parsing" ||
             state.stage === "preview" ||
@@ -388,9 +405,9 @@ export function TransactionAssistant({ onClose }: TransactionAssistantProps) {
       {state.stage === "idle" && (
         <div className="flex flex-wrap gap-1.5">
           {[
+            "Martabak 45rb sama teh poci 5rb",
             "Beli kopi 25rb",
             "Gaji masuk 5 juta",
-            "Bayar listrik 300 ribu",
             "Transfer 500rb ke Dana Darurat",
           ].map((ex) => (
             <button
@@ -427,7 +444,7 @@ export function TransactionAssistant({ onClose }: TransactionAssistantProps) {
         </div>
       )}
 
-      {/* Preview (confirmation) */}
+      {/* Preview */}
       {state.stage === "preview" && (
         <PreviewCard
           intent={state.intent}
@@ -474,7 +491,7 @@ export function TransactionAssistant({ onClose }: TransactionAssistantProps) {
   );
 }
 
-// ─── Preview Card ─────────────────────────────────────────────────────────────
+// --- Multi-Item Preview Card ---
 
 interface PreviewCardProps {
   intent: TransactionIntent;
@@ -502,6 +519,8 @@ function PreviewCard({
     ? accounts.find((a) => a.id === resolvedDestId)
     : mainAccount;
 
+  const isMultiItem = intent.items.length > 1;
+
   return (
     <div
       className={`rounded-xl border p-4 space-y-3 ${typeColors[intent.type]}`}
@@ -516,31 +535,79 @@ function PreviewCard({
         <span className="text-xs text-slate-400">Konfirmasi</span>
       </div>
 
-      {/* Amount */}
-      <div>
-        <p className="text-xs text-slate-500 dark:text-slate-400 mb-0.5">
-          Nominal
-        </p>
-        <p
-          className={`text-2xl font-bold tabular-nums ${typeAmountColor[intent.type]}`}
-        >
-          {formatCurrency(intent.amount)}
-        </p>
-      </div>
+      {/* Multi-item list */}
+      {isMultiItem ? (
+        <div className="space-y-2">
+          {intent.items.map((item: TransactionItem, idx: number) => (
+            <div
+              key={`${item.description}-${item.amount}-${idx}`}
+              className="flex items-start justify-between gap-2 rounded-lg bg-white/60 dark:bg-slate-900/40 px-3 py-2"
+            >
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-slate-800 dark:text-slate-200 truncate">
+                  {idx + 1}. {item.description}
+                </p>
+                {item.categoryHint && (
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    {item.categoryHint}
+                  </p>
+                )}
+              </div>
+              <p
+                className={`text-sm font-bold tabular-nums shrink-0 ${typeAmountColor[intent.type]}`}
+              >
+                {formatCurrency(item.amount)}
+              </p>
+            </div>
+          ))}
 
-      {/* Description */}
-      {intent.description && (
+          {/* Total line */}
+          <div className="flex items-center justify-between border-t border-slate-200/60 dark:border-slate-700/60 pt-2 mt-1">
+            <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              Total
+            </p>
+            <p
+              className={`text-xl font-bold tabular-nums ${typeAmountColor[intent.type]}`}
+            >
+              {formatCurrency(intent.totalAmount)}
+            </p>
+          </div>
+        </div>
+      ) : (
+        /* Single item — original layout */
         <div>
           <p className="text-xs text-slate-500 dark:text-slate-400 mb-0.5">
-            Keterangan
+            Nominal
           </p>
-          <p className="text-sm font-medium text-slate-800 dark:text-slate-200">
-            {intent.description}
+          <p
+            className={`text-2xl font-bold tabular-nums ${typeAmountColor[intent.type]}`}
+          >
+            {formatCurrency(intent.totalAmount)}
           </p>
+          {intent.items[0]?.description && (
+            <div className="mt-2">
+              <p className="text-xs text-slate-500 dark:text-slate-400 mb-0.5">
+                Keterangan
+              </p>
+              <p className="text-sm font-medium text-slate-800 dark:text-slate-200">
+                {intent.items[0].description}
+              </p>
+            </div>
+          )}
+          {intent.items[0]?.categoryHint && intent.type !== "Transfer" && (
+            <div className="mt-1">
+              <p className="text-xs text-slate-500 dark:text-slate-400 mb-0.5">
+                Kategori
+              </p>
+              <p className="text-xs font-medium text-slate-600 dark:text-slate-400">
+                {intent.items[0].categoryHint}
+              </p>
+            </div>
+          )}
         </div>
       )}
 
-      {/* Accounts */}
+      {/* Account info */}
       <div className="grid grid-cols-2 gap-2">
         {intent.type === "Expense" && srcAccount && (
           <div className="col-span-2">
@@ -586,22 +653,13 @@ function PreviewCard({
         )}
       </div>
 
-      {/* Category hint */}
-      {intent.categoryHint && intent.type !== "Transfer" && (
-        <div>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mb-0.5">
-            Kategori Terdeteksi
-          </p>
-          <p className="text-xs font-medium text-slate-600 dark:text-slate-400">
-            {intent.categoryHint}
-          </p>
-        </div>
-      )}
-
-      {/* Confidence indicator */}
+      {/* Parser badge */}
       <div className="flex items-center gap-1.5 text-xs text-slate-400">
         <Sparkles className="h-3 w-3" />
-        <span>Kepercayaan parser: {Math.round(intent.confidence * 100)}%</span>
+        <span>
+          {intent.parsedBy === "gemini" ? "Gemini AI" : "Parser Deterministic"}{" "}
+          • Kepercayaan {Math.round(intent.confidence * 100)}%
+        </span>
       </div>
 
       {/* Actions */}
@@ -633,7 +691,6 @@ function PreviewCard({
         </button>
       </div>
 
-      {/* Transfer warning: engine handles overdraft */}
       {intent.type === "Transfer" && (
         <p className="text-xs text-slate-400 text-center">
           Validasi saldo dilakukan sebelum transaksi disimpan
@@ -643,7 +700,7 @@ function PreviewCard({
   );
 }
 
-// ─── Floating Trigger Button ──────────────────────────────────────────────────
+// --- Floating Trigger Button ---
 
 export function AssistantFloatingButton({ onClick }: { onClick: () => void }) {
   return (
@@ -660,7 +717,7 @@ export function AssistantFloatingButton({ onClick }: { onClick: () => void }) {
   );
 }
 
-// ─── Inline Entry (for embedding in Transaction page) ─────────────────────────
+// --- Inline Entry ---
 
 export function AssistantInlineCard() {
   const [expanded, setExpanded] = useState(false);
@@ -681,8 +738,7 @@ export function AssistantInlineCard() {
             Catat dengan Bahasa Natural
           </p>
           <p className="text-xs text-slate-500">
-            &quot;Beli kopi 25rb&quot;, &quot;Gaji 5 juta&quot;, &quot;Transfer
-            500rb ke Dana Darurat&quot;
+            &quot;Martabak 45rb sama teh poci 5rb&quot;, &quot;Gaji 5 juta&quot;
           </p>
         </div>
         <ArrowUpRight

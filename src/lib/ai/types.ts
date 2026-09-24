@@ -1,43 +1,66 @@
 import type { TransactionType } from "~/types/database";
 
 /**
- * Structured Transaction Intent — output dari AI/deterministic parser.
+ * A single parsed transaction item within a multi-item input.
  *
- * AI adalah PARSER hanya. Mutation hanya melalui Unified Transaction Engine.
- * AI tidak boleh menghitung saldo, menulis ke storage, atau bypass engine.
+ * Example: "martabak 45rb" → { description: "Martabak", amount: 45000, ... }
+ */
+export interface TransactionItem {
+  /** Human-readable description extracted from input */
+  description: string;
+
+  /** Amount in IDR. Always > 0. Never fabricated — only from explicit input. */
+  amount: number;
+
+  /**
+   * Category name hint from natural language.
+   * Inferred per-item. Application layer resolves to category_id.
+   * Parser NEVER produces category_id directly.
+   */
+  categoryHint?: string;
+}
+
+/**
+ * Structured Multi-Transaction Intent — output of the AI/deterministic parser.
+ *
+ * AI is a PARSER ONLY. Mutation only through the Unified Transaction Engine.
+ * AI must NOT calculate balances, write to storage, or bypass the engine.
+ *
+ * Supports both single-item and multi-item inputs in one unified structure.
+ *
+ * CRITICAL RULE:
+ *   totalAmount MUST equal sum(items.map(i => i.amount))
+ *   Never fabricated, never guessed.
  */
 export interface TransactionIntent {
   /** Transaction type: Income | Expense | Transfer */
   type: TransactionType;
 
   /**
-   * Parsed amount in IDR (Rupiah).
-   * Must be finite and > 0 after validation.
+   * Parsed items. At least one item is always present when ok: true.
+   *
+   * For multi-item: ["martabak 45rb", "teh poci 5rb"] → 2 items
+   * For single-item: ["kopi 25rb"] → 1 item
    */
-  amount: number;
+  items: TransactionItem[];
 
   /**
-   * Human-readable description from user input.
-   * Used as transaction note.
+   * Total amount in IDR.
+   * MUST equal: items.reduce((s, i) => s + i.amount, 0)
+   * Computed by parser, verified by API route before use.
    */
-  description?: string;
-
-  /**
-   * Category name hint from natural language.
-   * Application layer resolves to category_id; parser never produces IDs.
-   */
-  categoryHint?: string;
+  totalAmount: number;
 
   /**
    * Source account name for Transfer/Expense.
-   * Application layer resolves to account_id by fuzzy matching account names.
+   * Application layer resolves to account_id by fuzzy matching.
    * Parser NEVER produces account_id directly.
    */
   sourceAccountName?: string;
 
   /**
    * Destination account name for Transfer/Income.
-   * Application layer resolves to account_id by fuzzy matching account names.
+   * Application layer resolves to account_id by fuzzy matching.
    */
   destinationAccountName?: string;
 
@@ -59,6 +82,11 @@ export interface TransactionIntent {
    * Shown to user as clarification prompt.
    */
   clarificationNeeded?: string;
+
+  /**
+   * Parser that produced this result.
+   */
+  parsedBy?: "gemini" | "deterministic";
 }
 
 /**
