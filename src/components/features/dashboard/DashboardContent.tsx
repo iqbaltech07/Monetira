@@ -2,9 +2,21 @@
 
 import { useMemo, useState } from "react";
 import { BiSolidWallet } from "react-icons/bi";
-import { FaArrowTrendDown, FaArrowTrendUp } from "react-icons/fa6";
-import { ArrowRight } from "lucide-react";
+import { FaArrowTrendDown, FaArrowTrendUp, FaPiggyBank } from "react-icons/fa6";
+import {
+  ArrowRight,
+  ArrowLeftRight,
+  BarChart3,
+  HandCoins,
+  PieChart,
+  Users,
+} from "lucide-react";
 import Link from "next/link";
+import { Button } from "~/components/ui/button";
+import {
+  AssistantFloatingButton,
+  TransactionAssistant,
+} from "~/components/features/assistant/TransactionAssistant";
 import { ExpenseCategoryCard } from "~/components/features/dashboard/ExpenseCategoryCard";
 import { IncomeExpenseChart } from "~/components/features/dashboard/IncomeExpenseChart";
 import ButtonNewTarget from "~/components/features/savings/ButtonNewTarget";
@@ -22,62 +34,91 @@ import {
 import { useGsapReveal } from "~/lib/gsap";
 import { useMonetira } from "~/lib/store/monetira-context";
 import { formatCurrency } from "~/lib/utils";
-import type { Saving, Transaction } from "~/types/database";
 
-interface DashboardContentProps {
-  transactions?: Transaction[];
-  savings?: Saving[];
-  userBalance?: number;
-}
-
-export function DashboardContent({
-  transactions: propTx,
-  savings: propSavings,
-}: DashboardContentProps) {
+export function DashboardContent() {
   const containerRef = useGsapReveal<HTMLDivElement>({ stagger: 0.06, y: 15 });
   const {
-    transactions: storeTx,
-    savings: storeSavings,
+    transactions,
+    savings,
     categories,
-    netBalance,
-    totalIncome,
-    totalExpense,
+    mainBalance,
+    totalFunds,
+    totalSavings,
+    budgets,
+    getBudgetSpending,
+    debtSummary,
+    splitBillSummary,
   } = useMonetira();
 
   const [hideBalance, setHideBalance] = useState(false);
+  const [assistantOpen, setAssistantOpen] = useState(false);
 
-  // Use store data by default
-  const transactions = propTx || storeTx;
-  const savings = propSavings || storeSavings;
+  // Budget overview for dashboard
+  const budgetOverview = useMemo(() => {
+    let totalBudget = 0;
+    let totalSpent = 0;
+    let exceededCount = 0;
+    for (const b of budgets) {
+      totalBudget += b.amount;
+      const res = getBudgetSpending(b);
+      totalSpent += res.spent;
+      if (res.status === "EXCEEDED") exceededCount += 1;
+    }
+    return { totalBudget, totalSpent, exceededCount };
+  }, [budgets, getBudgetSpending]);
 
-  // Calculate totals for the current month
-  const currentMonth = new Date().getMonth();
-  const currentYear = new Date().getFullYear();
+  // =========================================================================
+  // TIME RANGE: Current calendar month — computed once on mount.
+  // No dependency on live state; the calendar month only changes on page reload.
+  // =========================================================================
+  const { periodStart, periodEnd } = useMemo(() => {
+    const now = new Date();
+    return {
+      periodStart: new Date(now.getFullYear(), now.getMonth(), 1),
+      periodEnd: new Date(
+        now.getFullYear(),
+        now.getMonth() + 1,
+        0,
+        23,
+        59,
+        59,
+        999,
+      ),
+    };
+  }, []);
 
   const currentMonthTransactions = useMemo(() => {
     return transactions.filter((t) => {
       const d = new Date(t.date);
-      return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+      return d >= periodStart && d <= periodEnd;
     });
-  }, [transactions, currentMonth, currentYear]);
+  }, [transactions, periodStart, periodEnd]);
 
+  // =========================================================================
+  // MONTHLY METRICS — only Income/Expense, Transfer excluded
+  // =========================================================================
   const monthIncome = useMemo(() => {
     return currentMonthTransactions
       .filter((t) => t.type === "Income")
-      .reduce((acc, curr) => acc + curr.amount, 0);
+      .reduce((acc, t) => acc + t.amount, 0);
   }, [currentMonthTransactions]);
 
   const monthExpense = useMemo(() => {
     return currentMonthTransactions
       .filter((t) => t.type === "Expense")
-      .reduce((acc, curr) => acc + curr.amount, 0);
+      .reduce((acc, t) => acc + t.amount, 0);
   }, [currentMonthTransactions]);
 
-  // Calculate category expenses for the chart
+  // Net Cash Flow = Income - Expense. Transfer is redistribution and must NOT affect this.
+  const monthNetCashFlow = monthIncome - monthExpense;
+
+  // =========================================================================
+  // CATEGORY BREAKDOWN — Expense only, current month, Transfer excluded
+  // =========================================================================
   const categoryExpenses = useMemo(() => {
     const categoryExpensesMap = new Map<string, number>();
 
-    transactions
+    currentMonthTransactions
       .filter((t) => t.type === "Expense")
       .forEach((t) => {
         const categoryName = t.category?.name || "Lainnya";
@@ -92,9 +133,11 @@ export function DashboardContent({
         color: `var(--chart-${(index % 5) + 1})`,
       }),
     );
-  }, [transactions]);
+  }, [currentMonthTransactions]);
 
-  // Recent 5 transactions
+  // =========================================================================
+  // RECENT TRANSACTIONS — latest 5 across all time, sorted by date desc
+  // =========================================================================
   const recentTransactions = useMemo(() => {
     return [...transactions]
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
@@ -103,6 +146,21 @@ export function DashboardContent({
 
   return (
     <div ref={containerRef} className="flex flex-col gap-6 md:gap-8">
+      {/* AI Transaction Assistant Overlay */}
+      {assistantOpen && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center">
+          <button
+            type="button"
+            aria-label="Tutup asisten transaksi"
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm cursor-default"
+            onClick={() => setAssistantOpen(false)}
+            onKeyDown={(e) => e.key === "Escape" && setAssistantOpen(false)}
+          />
+          <div className="relative z-10 w-full max-w-md rounded-2xl border border-slate-200/80 bg-white p-5 shadow-2xl dark:border-slate-800 dark:bg-slate-900">
+            <TransactionAssistant onClose={() => setAssistantOpen(false)} />
+          </div>
+        </div>
+      )}
       {/* Quick Action & Greeting Banner */}
       <div className="gsap-fade-up flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-5 sm:p-6 text-white shadow-md">
         <div>
@@ -122,16 +180,32 @@ export function DashboardContent({
         </div>
 
         <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5">
+          <Link href="/reports">
+            <Button
+              variant="outline"
+              className="h-10 px-3.5 bg-white/10 hover:bg-white/20 text-white border-white/20 text-xs font-semibold backdrop-blur-xs flex items-center gap-1.5 cursor-pointer"
+            >
+              <BarChart3 className="h-4 w-4" />
+              <span>Lihat Laporan Keuangan</span>
+            </Button>
+          </Link>
           <ButtonNewTransaction categories={categories} />
           <ButtonNewTarget />
         </div>
       </div>
+
+      {/* ── PRIMARY FINANCIAL OVERVIEW ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        {/* Saldo Utama — from ledger via context */}
         <div className="gsap-fade-up">
           <StatCard
-            title="Total Saldo Bersih"
-            description="Total dana Anda saat ini."
-            amount={formatCurrency(netBalance)}
+            title="Saldo Utama"
+            description={
+              hideBalance
+                ? "Total Dana: Rp ••••••••"
+                : `Total Dana: ${formatCurrency(totalFunds)}`
+            }
+            amount={formatCurrency(mainBalance)}
             icon={BiSolidWallet}
             variant="primary"
             isHidden={hideBalance}
@@ -139,27 +213,63 @@ export function DashboardContent({
             showEye={true}
           />
         </div>
+
+        {/* Total Tabungan — sum of all savings ledger balances */}
+        <div className="gsap-fade-up">
+          <StatCard
+            title="Total Tabungan"
+            description={`${savings.filter((s) => s.status === "Active").length} target aktif`}
+            amount={formatCurrency(totalSavings)}
+            icon={FaPiggyBank}
+            variant="info"
+            isHidden={hideBalance}
+          />
+        </div>
+
+        {/* Net Cash Flow Bulan Ini — Income minus Expense, Transfer excluded */}
+        <div className="gsap-fade-up sm:col-span-2 lg:col-span-1">
+          <StatCard
+            title="Arus Kas Bersih Bulan Ini"
+            description="Pemasukan dikurangi pengeluaran"
+            amount={
+              (monthNetCashFlow >= 0 ? "+" : "") +
+              formatCurrency(Math.abs(monthNetCashFlow))
+            }
+            icon={monthNetCashFlow >= 0 ? FaArrowTrendUp : FaArrowTrendDown}
+            variant={monthNetCashFlow >= 0 ? "success" : "danger"}
+            isHidden={hideBalance}
+          />
+        </div>
+      </div>
+
+      {/* ── MONTHLY CASH FLOW BREAKDOWN ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+        {/* Pemasukan Bulan Ini — only type === "Income" */}
         <div className="gsap-fade-up">
           <StatCard
             title="Pemasukan Bulan Ini"
-            description="Pendapatan periode aktif."
-            amount={formatCurrency(monthIncome || totalIncome)}
+            description="Semua transaksi Income periode ini"
+            amount={formatCurrency(monthIncome)}
             icon={FaArrowTrendUp}
             variant="success"
             isHidden={hideBalance}
           />
         </div>
-        <div className="gsap-fade-up sm:col-span-2 lg:col-span-1">
+
+        {/* Pengeluaran Bulan Ini — only type === "Expense" */}
+        <div className="gsap-fade-up">
           <StatCard
             title="Pengeluaran Bulan Ini"
-            description="Pengeluaran periode aktif."
-            amount={formatCurrency(monthExpense || totalExpense)}
+            description="Semua transaksi Expense periode ini"
+            amount={formatCurrency(monthExpense)}
             icon={FaArrowTrendDown}
             variant="danger"
             isHidden={hideBalance}
           />
         </div>
       </div>
+
+      {/* ── CHARTS & SAVINGS ── */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-8">
         <div className="gsap-fade-up min-w-0 lg:col-span-7">
           <Card className="h-full border border-slate-200/80 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900">
@@ -167,7 +277,9 @@ export function DashboardContent({
               <CardTitle className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100">
                 Grafik Pemasukan dan Pengeluaran
               </CardTitle>
-              <CardDescription>Arus kas transaksi Anda.</CardDescription>
+              <CardDescription>
+                Arus kas 6 bulan terakhir. Transfer tidak dihitung.
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <IncomeExpenseChart data={transactions} />
@@ -183,6 +295,137 @@ export function DashboardContent({
           <SavingsGoalCard savings={savings} />
         </div>
       </div>
+
+      {/* ── PHASE 8: FINANCIAL PLANNING & OBLIGATIONS ── */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+        {/* Pos Anggaran */}
+        <div className="gsap-fade-up rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <div className="p-2 rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400">
+                <PieChart className="w-5 h-5" />
+              </div>
+              <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                {budgets.length} Pos
+              </span>
+            </div>
+            <h4 className="font-bold text-base text-slate-900 dark:text-slate-100">
+              Anggaran Pengeluaran
+            </h4>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Terpakai {formatCurrency(budgetOverview.totalSpent)} dari{" "}
+              {formatCurrency(budgetOverview.totalBudget)}
+            </p>
+          </div>
+
+          <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+            <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+              {budgetOverview.exceededCount > 0 ? (
+                <span className="text-rose-600 dark:rose-400 font-bold">
+                  {budgetOverview.exceededCount} Melebihi Batas
+                </span>
+              ) : (
+                <span className="text-emerald-600 dark:text-emerald-400">
+                  Terkontrol Baik
+                </span>
+              )}
+            </span>
+            <Link
+              href="/budget"
+              className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 flex items-center gap-1"
+            >
+              <span>Kelola</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+        </div>
+
+        {/* Hutang & Piutang */}
+        <div className="gsap-fade-up rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <div className="p-2 rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400">
+                <HandCoins className="w-5 h-5" />
+              </div>
+              <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                {debtSummary.activeDebtsCount} Aktif
+              </span>
+            </div>
+            <h4 className="font-bold text-base text-slate-900 dark:text-slate-100">
+              Hutang & Piutang
+            </h4>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Hutang: {formatCurrency(debtSummary.remainingOwedByMe)} • Piutang:{" "}
+              {formatCurrency(debtSummary.remainingOwedToMe)}
+            </p>
+          </div>
+
+          <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+            <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+              {debtSummary.remainingOwedByMe > 0 ? (
+                <span className="text-amber-600 dark:text-amber-400">
+                  Ada Kewajiban Bayar
+                </span>
+              ) : (
+                <span className="text-emerald-600 dark:text-emerald-400">
+                  Bebas Hutang
+                </span>
+              )}
+            </span>
+            <Link
+              href="/debts"
+              className="text-xs font-semibold text-amber-600 hover:text-amber-700 dark:text-amber-400 flex items-center gap-1"
+            >
+              <span>Kelola</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+        </div>
+
+        {/* Split Bill */}
+        <div className="gsap-fade-up rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <div className="p-2 rounded-xl bg-purple-50 text-purple-600 dark:bg-purple-950/60 dark:text-purple-400">
+                <Users className="w-5 h-5" />
+              </div>
+              <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                {splitBillSummary.totalBills} Acara
+              </span>
+            </div>
+            <h4 className="font-bold text-base text-slate-900 dark:text-slate-100">
+              Bagi Tagihan (Split Bill)
+            </h4>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Tertunda dari rekan:{" "}
+              {formatCurrency(splitBillSummary.outstandingAmount)}
+            </p>
+          </div>
+
+          <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+            <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+              {splitBillSummary.unsettledCount > 0 ? (
+                <span className="text-purple-600 dark:text-purple-400 font-bold">
+                  {splitBillSummary.unsettledCount} Belum Tuntas
+                </span>
+              ) : (
+                <span className="text-emerald-600 dark:text-emerald-400">
+                  Semua Lunas
+                </span>
+              )}
+            </span>
+            <Link
+              href="/split-bill"
+              className="text-xs font-semibold text-purple-600 hover:text-purple-700 dark:text-purple-400 flex items-center gap-1"
+            >
+              <span>Kelola</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* ── RECENT TRANSACTIONS ── */}
       <div className="gsap-fade-up rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900">
         <div className="flex items-center justify-between mb-4">
           <div>
@@ -203,9 +446,14 @@ export function DashboardContent({
         </div>
 
         {recentTransactions.length === 0 ? (
-          <p className="text-xs text-slate-400 py-4 text-center">
-            Belum ada transaksi yang dicatat.
-          </p>
+          <div className="flex flex-col items-center justify-center py-8 text-center gap-2">
+            <div className="p-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400">
+              <ArrowLeftRight className="h-5 w-5" />
+            </div>
+            <p className="text-xs text-slate-400">
+              Belum ada transaksi yang dicatat.
+            </p>
+          </div>
         ) : (
           <div className="flex flex-col gap-2.5">
             {recentTransactions.map((tx) => (
@@ -214,6 +462,9 @@ export function DashboardContent({
           </div>
         )}
       </div>
+
+      {/* Floating AI Assistant trigger — above BottomNav (z-40) */}
+      <AssistantFloatingButton onClick={() => setAssistantOpen(true)} />
     </div>
   );
 }

@@ -1,7 +1,13 @@
 import type {
+  Account,
+  AiUsageRecord,
+  Budget,
   Category,
+  Debt,
   MarketAsset,
   Saving,
+  SplitBill,
+  Subscription,
   Transaction,
   User,
   UserPreferences,
@@ -24,6 +30,54 @@ export const INITIAL_PREFERENCES: UserPreferences = {
   budgetAlerts: true,
   theme: "light",
 };
+
+export const INITIAL_ACCOUNTS: Account[] = [
+  {
+    id: "acc_main_default",
+    user_id: "user_01",
+    name: "Saldo Utama",
+    type: "MAIN",
+    savings_goal_id: null,
+    opening_balance: 0,
+    created_at: new Date("2024-01-01"),
+  },
+  {
+    id: "acc_sav_sav_1",
+    user_id: "user_01",
+    name: "Dana Darurat (6 Bulan)",
+    type: "SAVINGS",
+    savings_goal_id: "sav_1",
+    opening_balance: 32500000,
+    created_at: new Date("2024-01-01"),
+  },
+  {
+    id: "acc_sav_sav_2",
+    user_id: "user_01",
+    name: "Liburan ke Jepang",
+    type: "SAVINGS",
+    savings_goal_id: "sav_2",
+    opening_balance: 14000000,
+    created_at: new Date("2024-02-01"),
+  },
+  {
+    id: "acc_sav_sav_3",
+    user_id: "user_01",
+    name: "Laptop Kerja Baru",
+    type: "SAVINGS",
+    savings_goal_id: "sav_3",
+    opening_balance: 22000000,
+    created_at: new Date("2024-01-15"),
+  },
+  {
+    id: "acc_sav_sav_4",
+    user_id: "user_01",
+    name: "DP Rumah Impian",
+    type: "SAVINGS",
+    savings_goal_id: "sav_4",
+    opening_balance: 28000000,
+    created_at: new Date("2024-03-01"),
+  },
+];
 
 export const INITIAL_CATEGORIES: Category[] = [
   // Income
@@ -53,6 +107,20 @@ export const INITIAL_CATEGORIES: Category[] = [
     name: "Bisnis & Sampingan",
     type: "Income",
     icon: "ShoppingBag",
+    created_at: new Date("2024-01-01"),
+  },
+  {
+    id: "cat_inc_debt",
+    name: "Penerimaan Piutang",
+    type: "Income",
+    icon: "Wallet",
+    created_at: new Date("2024-01-01"),
+  },
+  {
+    id: "cat_inc_split",
+    name: "Pelunasan Split Bill",
+    type: "Income",
+    icon: "Users",
     created_at: new Date("2024-01-01"),
   },
 
@@ -106,12 +174,20 @@ export const INITIAL_CATEGORIES: Category[] = [
     icon: "BookOpen",
     created_at: new Date("2024-01-01"),
   },
+  {
+    id: "cat_exp_debt",
+    name: "Pembayaran Hutang",
+    type: "Expense",
+    icon: "CreditCard",
+    created_at: new Date("2024-01-01"),
+  },
 ];
 
 export const INITIAL_TRANSACTIONS: Transaction[] = [
   {
     id: "trx_1",
     user_id: "user_01",
+    account_id: "acc_main_default",
     category_id: "cat_inc_1",
     type: "Income",
     amount: 15000000,
@@ -123,6 +199,7 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
   {
     id: "trx_2",
     user_id: "user_01",
+    account_id: "acc_main_default",
     category_id: "cat_exp_3",
     type: "Expense",
     amount: 3500000,
@@ -134,6 +211,7 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
   {
     id: "trx_3",
     user_id: "user_01",
+    account_id: "acc_main_default",
     category_id: "cat_exp_1",
     type: "Expense",
     amount: 125000,
@@ -145,6 +223,7 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
   {
     id: "trx_4",
     user_id: "user_01",
+    account_id: "acc_main_default",
     category_id: "cat_exp_2",
     type: "Expense",
     amount: 45000,
@@ -156,6 +235,7 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
   {
     id: "trx_5",
     user_id: "user_01",
+    account_id: "acc_main_default",
     category_id: "cat_inc_2",
     type: "Income",
     amount: 3200000,
@@ -167,6 +247,7 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
   {
     id: "trx_6",
     user_id: "user_01",
+    account_id: "acc_main_default",
     category_id: "cat_exp_4",
     type: "Expense",
     amount: 175000,
@@ -178,6 +259,7 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
   {
     id: "trx_7",
     user_id: "user_01",
+    account_id: "acc_main_default",
     category_id: "cat_exp_5",
     type: "Expense",
     amount: 350000,
@@ -189,6 +271,7 @@ export const INITIAL_TRANSACTIONS: Transaction[] = [
   {
     id: "trx_8",
     user_id: "user_01",
+    account_id: "acc_main_default",
     category_id: "cat_inc_3",
     type: "Income",
     amount: 850000,
@@ -396,3 +479,133 @@ export const INITIAL_MARKET_ASSETS: MarketAsset[] = [
     icon: "🇸🇬",
   },
 ];
+
+export const INITIAL_BUDGETS: Budget[] = [
+  {
+    id: "bud_1",
+    user_id: "user_01",
+    category_id: "cat_exp_1", // Makanan & Minuman
+    amount: 2500000,
+    period: "MONTHLY",
+    start_date: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+    created_at: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+  },
+  {
+    id: "bud_2",
+    user_id: "user_01",
+    category_id: "cat_exp_2", // Transportasi
+    amount: 1000000,
+    period: "MONTHLY",
+    start_date: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+    created_at: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+  },
+  {
+    id: "bud_3",
+    user_id: "user_01",
+    category_id: "cat_exp_4", // Hiburan & Rekreasi
+    amount: 500000,
+    period: "MONTHLY",
+    start_date: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+    created_at: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+  },
+];
+
+export const INITIAL_DEBTS: Debt[] = [
+  {
+    id: "debt_1",
+    user_id: "user_01",
+    person_name: "Budi Santoso",
+    direction: "OWED_BY_ME",
+    original_amount: 350000,
+    remaining_amount: 350000,
+    due_date: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 15),
+    note: "Talangan tiket konser",
+    status: "UNPAID",
+    created_at: new Date(new Date().getFullYear(), new Date().getMonth(), 5),
+    payments: [],
+  },
+  {
+    id: "debt_2",
+    user_id: "user_01",
+    person_name: "Andi Wijaya",
+    direction: "OWED_TO_ME",
+    original_amount: 500000,
+    remaining_amount: 250000,
+    due_date: new Date(new Date().getFullYear(), new Date().getMonth(), 28),
+    note: "Pinjaman keperluan mendesak",
+    status: "PARTIAL",
+    created_at: new Date(
+      new Date().getFullYear(),
+      new Date().getMonth() - 1,
+      20,
+    ),
+    payments: [
+      {
+        id: "pay_1",
+        debt_id: "debt_2",
+        amount: 250000,
+        date: new Date(new Date().getFullYear(), new Date().getMonth(), 2),
+        note: "Cicilan pertama",
+        created_at: new Date(
+          new Date().getFullYear(),
+          new Date().getMonth(),
+          2,
+        ),
+      },
+    ],
+  },
+];
+
+export const INITIAL_SPLIT_BILLS: SplitBill[] = [
+  {
+    id: "sb_1",
+    user_id: "user_01",
+    title: "Makan Siang Bareng Tim",
+    total_amount: 300000,
+    date: new Date(new Date().getFullYear(), new Date().getMonth(), 10),
+    note: "Resto Padang Merdeka",
+    participants: [
+      {
+        id: "part_1",
+        name: "Saya",
+        amount: 100000,
+        is_me: true,
+        paid: true,
+      },
+      {
+        id: "part_2",
+        name: "Budi",
+        amount: 100000,
+        is_me: false,
+        paid: false,
+      },
+      {
+        id: "part_3",
+        name: "Rian",
+        amount: 100000,
+        is_me: false,
+        paid: false,
+      },
+    ],
+    created_at: new Date(new Date().getFullYear(), new Date().getMonth(), 10),
+  },
+];
+
+export const INITIAL_SUBSCRIPTION: Subscription = {
+  id: "sub_user_01_free",
+  user_id: "user_01",
+  plan: "FREE",
+  status: "ACTIVE",
+  started_at: "2024-01-01T00:00:00.000Z",
+  expires_at: "2099-12-31T23:59:59.999Z",
+  created_at: "2024-01-01T00:00:00.000Z",
+  updated_at: null,
+};
+
+export const INITIAL_AI_USAGE: AiUsageRecord = {
+  user_id: "user_01",
+  week_id: "2026-W39",
+  chat_count: 0,
+  transaction_parse_count: 0,
+  updated_at: new Date().toISOString(),
+};

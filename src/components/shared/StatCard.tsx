@@ -7,7 +7,7 @@ export interface StatCardProps {
   description?: string;
   amount: string;
   icon: ElementType;
-  variant?: "primary" | "success" | "danger" | "info";
+  variant?: "primary" | "success" | "danger" | "info" | "warning";
   change?: string;
   changeColor?: "success" | "danger" | "primary" | "warning";
   changeDescription?: string;
@@ -32,6 +32,10 @@ const variantStyles = {
   info: {
     textColor: "text-purple-600 dark:text-purple-400",
     iconBg: "bg-purple-50 dark:bg-purple-950/50",
+  },
+  warning: {
+    textColor: "text-amber-600 dark:text-amber-400",
+    iconBg: "bg-amber-50 dark:bg-amber-950/50",
   },
 };
 

@@ -8,6 +8,7 @@ import ButtonNewTransaction from "~/components/features/transactions/ButtonNewTr
 import SearchFilterTransaction from "~/components/features/transactions/SearchFilterTransaction";
 import { TransactionForm } from "~/components/features/transactions/TransactionForm";
 import TransactionRowHistory from "~/components/features/transactions/TransactionRowHistory";
+import { AssistantInlineCard } from "~/components/features/assistant/TransactionAssistant";
 import { StatCard, type StatCardProps } from "~/components/shared/StatCard";
 import {
   Dialog,
@@ -30,8 +31,10 @@ export function TransactionContent() {
     exportTransactionsCSV,
     totalIncome,
     totalExpense,
-    netBalance,
   } = useMonetira();
+
+  // Net Cash Flow = Income - Expense. Transfer is internal redistribution, excluded.
+  const netCashFlow = totalIncome - totalExpense;
 
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
@@ -80,9 +83,9 @@ export function TransactionContent() {
     {
       title: "Arus Kas Bersih",
       description: "Selisih pemasukan & pengeluaran",
-      amount: formatCurrency(netBalance),
+      amount: formatCurrency(netCashFlow),
       icon: BiMoney,
-      variant: netBalance >= 0 ? "primary" : "danger",
+      variant: netCashFlow >= 0 ? "primary" : "danger",
     },
   ];
 
@@ -105,6 +108,11 @@ export function TransactionContent() {
             <StatCard {...item} />
           </div>
         ))}
+      </div>
+
+      {/* AI Transaction Assistant — inline collapsible entry */}
+      <div className="gsap-fade-up">
+        <AssistantInlineCard />
       </div>
 
       {/* Filter and Action bar */}

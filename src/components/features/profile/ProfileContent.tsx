@@ -9,11 +9,13 @@ import {
   Key,
   RotateCcw,
   Shield,
+  Sparkles,
   Upload,
   User as UserIcon,
   Wallet,
 } from "lucide-react";
 import Image from "next/image";
+import { PricingView } from "~/components/features/subscription/PricingView";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Textarea } from "~/components/ui/textarea";
@@ -37,7 +39,7 @@ export function ProfileContent() {
   } = useMonetira();
 
   const [activeTab, setActiveTab] = useState<
-    "profile" | "preferences" | "security" | "backup"
+    "profile" | "preferences" | "security" | "backup" | "subscription"
   >("profile");
 
   // Form states
@@ -172,6 +174,11 @@ export function ProfileContent() {
             icon: Wallet,
           },
           { id: "security" as const, label: "Keamanan Akun", icon: Shield },
+          {
+            id: "subscription" as const,
+            label: "Langganan & Paket",
+            icon: Sparkles,
+          },
           { id: "backup" as const, label: "Cadangan & Reset", icon: Database },
         ].map((tab) => {
           const Icon = tab.icon;
@@ -533,6 +540,9 @@ export function ProfileContent() {
           </div>
         </div>
       )}
+
+      {/* Tab: Subscription & Plans */}
+      {activeTab === "subscription" && <PricingView />}
     </div>
   );
 }

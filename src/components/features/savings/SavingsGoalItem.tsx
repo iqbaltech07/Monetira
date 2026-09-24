@@ -10,10 +10,11 @@ interface SavingsGoalItemProps {
 }
 
 export function SavingsGoalItem({ goal }: SavingsGoalItemProps) {
-  const progress = Math.min(
-    (goal.current_amount / goal.target_amount) * 100,
-    100,
-  );
+  // Guard: target_amount = 0 or missing → progress = 0 (avoids Infinity / NaN)
+  const progress =
+    goal.target_amount > 0
+      ? Math.min(((goal.current_amount || 0) / goal.target_amount) * 100, 100)
+      : 0;
 
   return (
     <div>

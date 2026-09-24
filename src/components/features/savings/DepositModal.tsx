@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowUpRight, ArrowDownLeft } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import {
@@ -28,36 +28,41 @@ export function DepositModal({
   open,
   onOpenChange,
 }: DepositModalProps) {
-  const { depositSaving, withdrawSaving, addTransaction } = useMonetira();
+  const { depositSaving, withdrawSaving, mainBalance } = useMonetira();
   const [type, setType] = useState<"deposit" | "withdraw">("deposit");
   const [amount, setAmount] = useState<number>(100000);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Reset state when modal opens
+  useEffect(() => {
+    if (open) {
+      setType("deposit");
+      setAmount(100000);
+      setErrorMessage(null);
+    }
+  }, [open]);
 
   if (!saving) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (amount <= 0) return;
+    setErrorMessage(null);
 
     if (type === "deposit") {
-      depositSaving(saving.id, amount);
-      // Auto-catat transaksi pengeluaran tabungan
-      addTransaction({
-        type: "Expense",
-        amount,
-        category_id: "cat_exp_5",
-        date: new Date(),
-        note: `Setor Tabungan: ${saving.name}`,
-      });
+      // Phase 3: Pure ledger Transfer from Saldo Utama to Savings Account
+      const result = depositSaving(saving.id, amount);
+      if (!result.success) {
+        setErrorMessage(result.error || "Gagal menyetor dana ke tabungan.");
+        return;
+      }
     } else {
-      withdrawSaving(saving.id, amount);
-      // Auto-catat transaksi pemasukan dari pencairan tabungan
-      addTransaction({
-        type: "Income",
-        amount,
-        category_id: "cat_inc_4",
-        date: new Date(),
-        note: `Pencairan Tabungan: ${saving.name}`,
-      });
+      // Phase 3: Pure ledger Transfer from Savings Account to Saldo Utama
+      const result = withdrawSaving(saving.id, amount);
+      if (!result.success) {
+        setErrorMessage(result.error || "Gagal menarik dana dari tabungan.");
+        return;
+      }
     }
 
     onOpenChange(false);
@@ -90,7 +95,10 @@ export function DepositModal({
         <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl">
           <button
             type="button"
-            onClick={() => setType("deposit")}
+            onClick={() => {
+              setType("deposit");
+              setErrorMessage(null);
+            }}
             className={`flex items-center justify-center gap-1.5 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all ${
               type === "deposit"
                 ? "bg-white text-emerald-600 shadow-xs dark:bg-slate-900 dark:text-emerald-400"
@@ -102,7 +110,10 @@ export function DepositModal({
           </button>
           <button
             type="button"
-            onClick={() => setType("withdraw")}
+            onClick={() => {
+              setType("withdraw");
+              setErrorMessage(null);
+            }}
             className={`flex items-center justify-center gap-1.5 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all ${
               type === "withdraw"
                 ? "bg-white text-rose-600 shadow-xs dark:bg-slate-900 dark:text-rose-400"
@@ -156,8 +167,8 @@ export function DepositModal({
           </div>
 
           {/* Live Preview Card */}
-          <div className="rounded-xl border border-slate-200/80 bg-slate-50/70 p-3.5 dark:border-slate-800 dark:bg-slate-900/50">
-            <div className="flex justify-between text-xs text-slate-500 mb-1">
+          <div className="rounded-xl border border-slate-200/80 bg-slate-50/70 p-3.5 dark:border-slate-800 dark:bg-slate-900/50 space-y-2">
+            <div className="flex justify-between text-xs text-slate-500">
               <span>Estimasi Saldo Setelah Aksi</span>
               <span className="font-semibold text-slate-700 dark:text-slate-300">
                 {previewProgress}% Target
@@ -169,7 +180,21 @@ export function DepositModal({
                 / {formatCurrency(saving.target_amount)}
               </span>
             </p>
+            {type === "deposit" && (
+              <p className="text-xs text-slate-400 border-t border-slate-200/80 dark:border-slate-800 pt-2">
+                Saldo Utama tersedia:{" "}
+                <span className="font-semibold text-slate-600 dark:text-slate-300">
+                  {formatCurrency(mainBalance)}
+                </span>
+              </p>
+            )}
           </div>
+
+          {errorMessage && (
+            <div className="p-3 text-xs rounded-xl bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-900/50">
+              {errorMessage}
+            </div>
+          )}
 
           <Button
             type="submit"

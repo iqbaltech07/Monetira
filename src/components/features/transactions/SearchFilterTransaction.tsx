@@ -65,6 +65,7 @@ const SearchFilterTransaction = ({
               <SelectItem value="all">Semua Tipe</SelectItem>
               <SelectItem value="Income">Pemasukan</SelectItem>
               <SelectItem value="Expense">Pengeluaran</SelectItem>
+              <SelectItem value="Transfer">Transfer</SelectItem>
             </SelectContent>
           </Select>
         </div>

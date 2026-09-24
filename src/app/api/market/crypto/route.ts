@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { MarketAsset } from "~/types/database";
 
 const COINGECKO_BASE_URL = "https://api.coingecko.com/api/v3";
-const API_KEY = process.env.COINGECKO_API_KEY || "CG-3Jj7n9G3PEwpWPEF42hbeHhv";
+const API_KEY = process.env.COINGECKO_API_KEY;
 
 // In-memory cache to guarantee compliance with Demo plan (30 calls/min)
 interface CacheEntry {
@@ -67,11 +67,15 @@ export async function GET() {
       "bitcoin,ethereum,solana,binancecoin,ripple,cardano,dogecoin";
     const url = `${COINGECKO_BASE_URL}/coins/markets?vs_currency=idr&ids=${coinIds}&sparkline=true&price_change_percentage=24h`;
 
+    const headers: Record<string, string> = {
+      Accept: "application/json",
+    };
+    if (API_KEY) {
+      headers["x-cg-demo-api-key"] = API_KEY;
+    }
+
     const res = await fetch(url, {
-      headers: {
-        Accept: "application/json",
-        "x-cg-demo-api-key": API_KEY,
-      },
+      headers,
       next: { revalidate: 60 },
     });
 

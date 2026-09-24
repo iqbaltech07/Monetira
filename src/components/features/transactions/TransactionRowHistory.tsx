@@ -5,6 +5,7 @@ import {
   Edit3,
   Trash2,
   ArrowDown,
+  ArrowLeftRight,
   Wallet,
   Laptop,
   TrendingUp,
@@ -16,19 +17,26 @@ import {
   HeartPulse,
   BookOpen,
 } from "lucide-react";
-import type { Transaction } from "~/types/database";
+import { useMonetira } from "~/lib/store/monetira-context";
+import type { Transaction, TransactionType } from "~/types/database";
 
 /* =========================
  * Util: Format & Helpers
  * ========================= */
 
-const formatSignedPrice = (amount: number, type: "Income" | "Expense") => {
+const formatSignedPrice = (amount: number, type: TransactionType) => {
   const abs = Math.abs(amount);
+  if (type === "Transfer") {
+    return {
+      text: `⇄ ${formatCurrency(abs)}`,
+      className: "text-blue-600 dark:text-blue-400 font-semibold",
+    };
+  }
   const prefix = type === "Income" ? "+" : "-";
   const className =
     type === "Income"
       ? "text-emerald-600 dark:text-emerald-400"
-      : "text-red-600 dark:text-red-400";
+      : "text-rose-600 dark:text-rose-400";
   return { text: `${prefix} ${formatCurrency(abs)}`, className };
 };
 
@@ -71,20 +79,35 @@ const TransactionRowHistory = ({
   onEdit,
   onDelete,
 }: TransactionRowHistoryProps) => {
+  const { accounts } = useMonetira();
   const { text, className } = formatSignedPrice(item.amount, item.type);
+
+  const sourceAcc = accounts.find(
+    (a) => a.id === (item.source_account_id || item.account_id),
+  );
+  const destAcc = accounts.find((a) => a.id === item.destination_account_id);
 
   // Determine icon
   const Icon =
-    item.category?.icon && iconMap[item.category.icon]
-      ? iconMap[item.category.icon]
-      : item.type === "Income"
-        ? TrendingUp
-        : ArrowDown;
+    item.type === "Transfer"
+      ? ArrowLeftRight
+      : item.category?.icon && iconMap[item.category.icon]
+        ? iconMap[item.category.icon]
+        : item.type === "Income"
+          ? TrendingUp
+          : ArrowDown;
 
   const categoryColor =
-    item.type === "Income"
-      ? "text-emerald-700 dark:text-emerald-400 border-emerald-500/40"
-      : "text-slate-600 dark:text-slate-400 border-slate-300 dark:border-slate-700";
+    item.type === "Transfer"
+      ? "text-blue-600 dark:text-blue-400 border-blue-400/40"
+      : item.type === "Income"
+        ? "text-emerald-700 dark:text-emerald-400 border-emerald-500/40"
+        : "text-slate-600 dark:text-slate-400 border-slate-300 dark:border-slate-700";
+
+  const transferLabel =
+    sourceAcc && destAcc
+      ? `⇄ ${sourceAcc.name} → ${destAcc.name}`
+      : "⇄ Transfer";
 
   return (
     <div className="group flex items-center justify-between rounded-xl border border-slate-200/80 bg-white p-3 shadow-xs transition-all hover:shadow-md dark:border-slate-800 dark:bg-slate-900 sm:px-4 sm:py-3.5 gap-2.5 sm:gap-3">
@@ -93,9 +116,11 @@ const TransactionRowHistory = ({
         {/* Icon Wrapper */}
         <span
           className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl sm:h-11 sm:w-11 ${
-            item.type === "Income"
-              ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400"
-              : "bg-rose-50 text-rose-600 dark:bg-rose-900/20 dark:text-rose-400"
+            item.type === "Transfer"
+              ? "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400"
+              : item.type === "Income"
+                ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400"
+                : "bg-rose-50 text-rose-600 dark:bg-rose-900/20 dark:text-rose-400"
           }`}
         >
           <Icon aria-hidden className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -104,7 +129,10 @@ const TransactionRowHistory = ({
         {/* Text Details */}
         <div className="flex flex-col gap-0.5 min-w-0 flex-1">
           <p className="truncate text-xs sm:text-sm font-semibold text-slate-900 dark:text-slate-100">
-            {item.note || item.category?.name || "Transaksi"}
+            {item.type === "Transfer"
+              ? item.note ||
+                `Transfer: ${sourceAcc?.name || "Saldo Utama"} → ${destAcc?.name || "Tabungan"}`
+              : item.note || item.category?.name || "Transaksi"}
           </p>
 
           <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
@@ -112,7 +140,9 @@ const TransactionRowHistory = ({
             <span
               className={`inline-flex shrink-0 items-center text-[10px] sm:text-xs font-semibold tracking-wide border-b pb-0.5 ${categoryColor}`}
             >
-              {item.category?.name || "Umum"}
+              {item.type === "Transfer"
+                ? transferLabel
+                : item.category?.name || "Umum"}
             </span>
 
             {/* Date */}

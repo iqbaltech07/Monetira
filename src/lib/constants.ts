@@ -13,7 +13,7 @@ import {
   Users,
 } from "lucide-react";
 
-import { BsGridFill } from "react-icons/bs";
+import { BsGridFill, BsRobot } from "react-icons/bs";
 import { FaPiggyBank, FaUser } from "react-icons/fa6";
 import { GiCardExchange } from "react-icons/gi";
 import { SiBitcoin } from "react-icons/si";
@@ -21,9 +21,23 @@ import { SiBitcoin } from "react-icons/si";
 export const NAV_ITEMS = [
   { href: "/dashboard", icon: BsGridFill, label: "Dashboard" },
   { href: "/transactions", icon: GiCardExchange, label: "Transaksi" },
+  { href: "/reports", icon: BarChart3, label: "Laporan" },
   { href: "/savings", icon: FaPiggyBank, label: "Tabungan" },
+  { href: "/budget", icon: PieChart, label: "Anggaran" },
+  { href: "/debts", icon: CreditCard, label: "Hutang" },
+  { href: "/split-bill", icon: Users, label: "Split Bill" },
   { href: "/market", icon: SiBitcoin, label: "Market" },
+  { href: "/assistant", icon: BsRobot, label: "AI Chat" },
   { href: "/profile", icon: FaUser, label: "Akun Saya" },
+];
+
+export const BOTTOM_NAV_ITEMS = [
+  { href: "/dashboard", icon: BsGridFill, label: "Dashboard" },
+  { href: "/transactions", icon: GiCardExchange, label: "Transaksi" },
+  { href: "/budget", icon: PieChart, label: "Anggaran" },
+  { href: "/debts", icon: CreditCard, label: "Hutang" },
+  { href: "/assistant", icon: BsRobot, label: "AI Chat" },
+  { href: "/profile", icon: FaUser, label: "Akun" },
 ];
 
 export const NAV_LINKS = [

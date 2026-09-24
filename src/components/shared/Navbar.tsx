@@ -13,15 +13,27 @@ import {
 } from "~/components/ui/dropdown-menu";
 import { NAV_ITEMS } from "~/lib/constants";
 
+const TITLE_MAP: Record<string, string> = {
+  "/dashboard": "Dashboard",
+  "/transactions": "Transaksi",
+  "/reports": "Laporan Keuangan",
+  "/savings": "Tabungan",
+  "/budget": "Anggaran",
+  "/debts": "Hutang & Piutang",
+  "/split-bill": "Split Bill",
+  "/market": "Market",
+  "/assistant": "AI Chat",
+  "/profile": "Akun Saya",
+};
+
 export function Navbar() {
   const pathname = usePathname();
   const currentPath = pathname;
 
   const activeNavItem = NAV_ITEMS.find((item) => item.href === currentPath);
 
-  const pageTitle = activeNavItem
-    ? activeNavItem.label
-    : "Halaman Tidak Ditemukan";
+  const pageTitle =
+    TITLE_MAP[currentPath] || activeNavItem?.label || "Monetira";
 
   return (
     <header className="sticky top-0 z-40 flex w-full items-center justify-between border-b border-slate-200/80 bg-white/95 px-4 py-3 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/95 sm:px-6 md:px-8">

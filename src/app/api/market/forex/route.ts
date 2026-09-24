@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import type { MarketAsset } from "~/types/database";
 
-const API_KEY = process.env.EXCHANGERATE_API_KEY || "a723caf7a71f1116fea077eb";
-const BASE_URL = `https://v6.exchangerate-api.com/v6/${API_KEY}/latest/USD`;
+const API_KEY = process.env.EXCHANGERATE_API_KEY;
+const BASE_URL = API_KEY
+  ? `https://v6.exchangerate-api.com/v6/${API_KEY}/latest/USD`
+  : null;
 
 interface ExchangeRateResponse {
   result: string;
@@ -77,6 +79,26 @@ export async function GET() {
       assets: memoryCache.data.assets,
       rates: memoryCache.data.rates,
     });
+  }
+
+  if (!BASE_URL) {
+    if (memoryCache) {
+      return NextResponse.json({
+        success: true,
+        source: "stale-cache",
+        warning: "EXCHANGERATE_API_KEY tidak dikonfigurasi. Menggunakan cache.",
+        updatedAt: new Date(memoryCache.timestamp).toISOString(),
+        assets: memoryCache.data.assets,
+        rates: memoryCache.data.rates,
+      });
+    }
+    return NextResponse.json(
+      {
+        success: false,
+        error: "EXCHANGERATE_API_KEY belum dikonfigurasi di server.",
+      },
+      { status: 503 },
+    );
   }
 
   try {

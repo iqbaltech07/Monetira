@@ -27,6 +27,34 @@ import { useMonetira } from "~/lib/store/monetira-context";
 import { formatCurrency } from "~/lib/utils";
 import type { MarketAsset } from "~/types/database";
 
+export function formatMarketPrice(
+  price: number,
+  currency: string = "IDR",
+): string {
+  if (currency === "USD") {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(price);
+  }
+  if (currency === "EUR") {
+    return new Intl.NumberFormat("de-DE", {
+      style: "currency",
+      currency: "EUR",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(price);
+  }
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(price);
+}
+
 export function MarketContent() {
   const containerRef = useGsapReveal<HTMLDivElement>({ stagger: 0.05, y: 15 });
   const { watchlist, toggleWatchlist, isWatchlisted } = useMonetira();
@@ -35,7 +63,7 @@ export function MarketContent() {
     INITIAL_MARKET_ASSETS,
   );
   const [selectedCategory, setSelectedCategory] = useState<
-    "ALL" | "Crypto" | "Stock" | "Commodity" | "WATCHLIST"
+    "ALL" | "Crypto" | "Stock" | "Commodity" | "Forex" | "WATCHLIST"
   >("ALL");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedAssetSymbol, setSelectedAssetSymbol] = useState<string>("BTC");
@@ -50,28 +78,39 @@ export function MarketContent() {
   // Forex rates mapping to IDR (default baselines)
   const [forexRates, setForexRates] = useState<Record<string, number>>({
     IDR: 1,
-    USD: 17840,
-    EUR: 20430.6,
-    GBP: 23808.89,
-    SGD: 13989.96,
-    JPY: 113.35,
-    AUD: 12685.77,
-    CNY: 2657.33,
-    MYR: 4378.67,
-    SAR: 4757.33,
+    USD: 16000,
+    EUR: 17500,
+    GBP: 20500,
+    SGD: 12200,
+    JPY: 110,
+    AUD: 10500,
+    CNY: 2200,
+    MYR: 3600,
+    SAR: 4260,
   });
 
-  // Fetch real-time data from CoinGecko & ExchangeRate API
-  const fetchMarketData = useCallback(async () => {
+  // Fetch real-time data from CoinGecko, ExchangeRate API, Gold API & Stock API
+  const fetchMarketData = useCallback(async (customSearch?: string) => {
     setIsLoadingLive(true);
     try {
-      const [cryptoRes, forexRes] = await Promise.allSettled([
-        fetch("/api/market/crypto"),
-        fetch("/api/market/forex"),
-      ]);
+      const stockUrl =
+        customSearch && customSearch.trim().length >= 2
+          ? `/api/market/stocks?q=${encodeURIComponent(customSearch.trim())}`
+          : "/api/market/stocks";
+
+      const [cryptoRes, forexRes, goldRes, stockRes] = await Promise.allSettled(
+        [
+          fetch("/api/market/crypto"),
+          fetch("/api/market/forex"),
+          fetch("/api/market/gold"),
+          fetch(stockUrl),
+        ],
+      );
 
       let newCryptoAssets: MarketAsset[] = [];
       let newForexAssets: MarketAsset[] = [];
+      let newGoldAssets: MarketAsset[] = [];
+      let newStockAssets: MarketAsset[] = [];
 
       if (cryptoRes.status === "fulfilled" && cryptoRes.value.ok) {
         const json = await cryptoRes.value.json();
@@ -90,15 +129,31 @@ export function MarketContent() {
         }
       }
 
-      if (newCryptoAssets.length > 0 || newForexAssets.length > 0) {
+      if (goldRes.status === "fulfilled" && goldRes.value.ok) {
+        const json = await goldRes.value.json();
+        if (json.success && Array.isArray(json.assets)) {
+          newGoldAssets = json.assets;
+        }
+      }
+
+      if (stockRes.status === "fulfilled" && stockRes.value.ok) {
+        const json = await stockRes.value.json();
+        if (json.success && Array.isArray(json.assets)) {
+          newStockAssets = json.assets;
+        }
+      }
+
+      const hasNewData =
+        newCryptoAssets.length > 0 ||
+        newForexAssets.length > 0 ||
+        newGoldAssets.length > 0 ||
+        newStockAssets.length > 0;
+
+      if (hasNewData) {
         setDataSource("live");
         setLastUpdated(new Date().toISOString());
 
         setMarketAssets((prev) => {
-          // Keep stocks & gold from previous state
-          const stocksAndGold = prev.filter(
-            (a) => a.category !== "Crypto" && a.category !== "Forex",
-          );
           const cryptoList =
             newCryptoAssets.length > 0
               ? newCryptoAssets
@@ -107,8 +162,16 @@ export function MarketContent() {
             newForexAssets.length > 0
               ? newForexAssets
               : prev.filter((a) => a.category === "Forex");
+          const goldList =
+            newGoldAssets.length > 0
+              ? newGoldAssets
+              : prev.filter((a) => a.category === "Commodity");
+          const stockList =
+            newStockAssets.length > 0
+              ? newStockAssets
+              : prev.filter((a) => a.category === "Stock");
 
-          return [...cryptoList, ...stocksAndGold, ...forexList];
+          return [...cryptoList, ...goldList, ...stockList, ...forexList];
         });
       }
     } catch (err) {
@@ -121,6 +184,16 @@ export function MarketContent() {
   useEffect(() => {
     fetchMarketData();
   }, [fetchMarketData]);
+
+  // Debounced search for stocks when search query is entered and Stock tab is active
+  useEffect(() => {
+    if (selectedCategory === "Stock" && searchQuery.trim().length >= 2) {
+      const timer = setTimeout(() => {
+        fetchMarketData(searchQuery.trim());
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [searchQuery, selectedCategory, fetchMarketData]);
 
   // Selected asset
   const selectedAsset = useMemo(() => {
@@ -141,15 +214,11 @@ export function MarketContent() {
       // Category filter
       if (selectedCategory === "WATCHLIST") {
         if (!watchlist.includes(asset.symbol)) return false;
-      } else if (
-        selectedCategory !== "ALL" &&
-        asset.category !== selectedCategory &&
-        !(selectedCategory === "Commodity" && asset.category === "Forex")
-      ) {
-        return false;
+      } else if (selectedCategory !== "ALL") {
+        if (asset.category !== selectedCategory) return false;
       }
 
-      // Search filter
+      // Search filter (client-side text match)
       if (searchQuery.trim() !== "") {
         const q = searchQuery.toLowerCase();
         return (
@@ -212,8 +281,8 @@ export function MarketContent() {
             <span>Pasar Finansial & Aset</span>
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-            Pantau pergerakan harga kripto *real-time* via CoinGecko, valuta
-            asing via ExchangeRate-API, saham IHSG, dan komoditas.
+            Pantau pergerakan harga kripto via CoinGecko, valuta asing via
+            ExchangeRate-API, emas spot dunia, dan saham secara real-time.
           </p>
         </div>
 
@@ -229,7 +298,7 @@ export function MarketContent() {
             />
             <span className="border-b border-slate-300 dark:border-slate-700 pb-0.5 font-medium">
               {dataSource === "live"
-                ? "CoinGecko & ExchangeRate Live"
+                ? "Pasar Live (Kripto, Valas, Emas, Saham)"
                 : "Mode Standar"}
             </span>
             {lastUpdated && (
@@ -247,7 +316,7 @@ export function MarketContent() {
             type="button"
             variant="outline"
             size="sm"
-            onClick={fetchMarketData}
+            onClick={() => fetchMarketData()}
             disabled={isLoadingLive}
             className="h-9 rounded-xl text-xs gap-1.5 cursor-pointer"
           >
@@ -319,8 +388,19 @@ export function MarketContent() {
 
           <div className="flex items-baseline sm:items-end flex-col">
             <span className="text-2xl font-extrabold text-slate-900 dark:text-white tabular-nums">
-              {formatCurrency(selectedAsset.price)}
+              {formatMarketPrice(
+                selectedAsset.price,
+                selectedAsset.currency || "IDR",
+              )}
             </span>
+            {selectedAsset.currency === "USD" && (
+              <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                ≈ Rp
+                {Math.round(
+                  selectedAsset.price * (forexRates.USD || 16000),
+                ).toLocaleString("id-ID")}
+              </span>
+            )}
             <div className="flex items-center gap-1.5 mt-0.5">
               <span
                 className={`text-xs font-bold flex items-center gap-0.5 ${
@@ -348,7 +428,10 @@ export function MarketContent() {
               Tertinggi 24 Jam
             </p>
             <p className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 tabular-nums">
-              {formatCurrency(selectedAsset.high24h)}
+              {formatMarketPrice(
+                selectedAsset.high24h,
+                selectedAsset.currency || "IDR",
+              )}
             </p>
           </div>
           <div>
@@ -356,7 +439,10 @@ export function MarketContent() {
               Terendah 24 Jam
             </p>
             <p className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 tabular-nums">
-              {formatCurrency(selectedAsset.low24h)}
+              {formatMarketPrice(
+                selectedAsset.low24h,
+                selectedAsset.currency || "IDR",
+              )}
             </p>
           </div>
           <div>
@@ -439,15 +525,16 @@ export function MarketContent() {
             {[
               { id: "ALL" as const, label: "Semua Aset" },
               { id: "Crypto" as const, label: "Kripto" },
-              { id: "Stock" as const, label: "Saham Indonesia" },
-              { id: "Commodity" as const, label: "Komoditas & Valas" },
+              { id: "Stock" as const, label: "Saham" },
+              { id: "Commodity" as const, label: "Emas & Logam" },
+              { id: "Forex" as const, label: "Valas / Forex" },
               { id: "WATCHLIST" as const, label: "Watchlist Saya" },
             ].map((tab) => (
               <button
                 key={tab.id}
                 type="button"
                 onClick={() => setSelectedCategory(tab.id)}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                   selectedCategory === tab.id
                     ? "bg-blue-600 text-white shadow-xs"
                     : "bg-white border border-slate-200/80 text-slate-600 hover:bg-slate-50 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-300"
@@ -536,8 +623,19 @@ export function MarketContent() {
                       {/* Asset Price & 24h Change */}
                       <div className="text-right shrink-0">
                         <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 tabular-nums">
-                          {formatCurrency(asset.price)}
+                          {formatMarketPrice(
+                            asset.price,
+                            asset.currency || "IDR",
+                          )}
                         </p>
+                        {asset.currency === "USD" && (
+                          <p className="text-[10px] text-slate-400 font-medium">
+                            ≈ Rp
+                            {Math.round(
+                              asset.price * (forexRates.USD || 16000),
+                            ).toLocaleString("id-ID")}
+                          </p>
+                        )}
                         <span
                           className={`text-[11px] font-semibold flex items-center justify-end gap-0.5 ${
                             asset.change24h >= 0

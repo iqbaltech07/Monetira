@@ -58,7 +58,7 @@ export function IncomeExpenseChart({ data }: { data: Transaction[] }) {
         if (entry) {
           if (tx.type === "Income") {
             entry.income += tx.amount;
-          } else {
+          } else if (tx.type === "Expense") {
             entry.expense += tx.amount;
           }
         }
